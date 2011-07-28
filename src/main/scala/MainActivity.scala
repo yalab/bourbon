@@ -29,8 +29,7 @@ class MainActivity extends Activity {
                                          "Downloading. Please wait...", true, true)
         (new Thread(new Runnable(){
           def run() {
-            println(dialog)
-            println("hoge")
+            ArticleProvider.download
             dialog.dismiss
           }
         })).start
