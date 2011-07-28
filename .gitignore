@@ -5,3 +5,6 @@ project/plugins/project/
 project/plugins/src_managed/
 project/plugins/target/
 target/
+src/main/java/
+src_managed/
+tests/src/main/java/
