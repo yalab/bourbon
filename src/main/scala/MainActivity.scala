@@ -29,7 +29,8 @@ class MainActivity extends Activity {
                                          "Downloading. Please wait...", true, true)
         (new Thread(new Runnable(){
           def run() {
-            ArticleProvider.download
+            val articles = ArticleProvider.download
+            println(articles)
             dialog.dismiss
           }
         })).start

@@ -12,12 +12,16 @@ object ArticleProvider{
   final val DATABASE_NAME    = "bourbon.db"
   final val DATABASE_VERSION = 1
 
-  def download() {
+  def download() = {
     val url = "http://www.voanews.com/templates/Articles.rss?sectionPath=/learningenglish/home"
     val feed = XML.load(new URL(url))
-    feed \ "channel" \ "item" foreach(item =>
-      println(item)
-    )
+    feed \ "channel" \ "item" map(item => {
+      val fields = List("title", "link", "description", "guid", "category", "encoded", "date", "enclosure")
+      fields.map(k => {
+        val v = if (k == "enclosure") item \ k \ "@url" else (item \ k).head.text
+        (k, v)
+      }).toMap
+    })
   }
 }
 
