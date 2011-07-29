@@ -1,6 +1,6 @@
 package org.yalab.bourbon
 
-import _root_.android.content.{ContentProvider, ContentValues, Context}
+import _root_.android.content.{ContentProvider, ContentValues, ContentUris, Context, UriMatcher}
 import _root_.android.database.Cursor
 import _root_.android.database.sqlite.{SQLiteDatabase, SQLiteOpenHelper}
 import _root_.android.net.Uri
@@ -11,6 +11,15 @@ import scala.xml.XML
 object ArticleProvider{
   final val DATABASE_NAME    = "bourbon.db"
   final val DATABASE_VERSION = 1
+  final val AUTHORITY = "org.yalab.bourbon"
+  final val TABLE_NAME = "articles"
+  final val CONTENT_URI = Uri.parse("content://" + AUTHORITY + "/" + TABLE_NAME)
+  final val CONTENT_TYPE= "vnd.android.cursor.dir/org.yalab.bourbon"
+  final val CONTENT_ITEM_TYPE = "vnd.android.cursor.item/org.yalab.bourbon"
+
+  final val INDEX = 1
+  final val SHOW  = 2
+
   val FIELDS = List("title", "link", "description", "guid", "category", "encoded", "date", "enclosure", "mp3", "script")
 
   def download() = {
@@ -39,13 +48,23 @@ object ArticleProvider{
 
 class ArticleProvider extends ContentProvider {
   import ArticleProvider._
+  var connection: Database = _
+
+  val matcher = new UriMatcher(UriMatcher.NO_MATCH)
+  matcher.addURI(AUTHORITY, TABLE_NAME, INDEX)
+  matcher.addURI(AUTHORITY, TABLE_NAME + "/#", SHOW)
 
   override def onCreate: Boolean = {
+    connection = new Database(getContext)
     true
   }
 
   def insert(uri: Uri, values: ContentValues): Uri = {
-    Uri.parse("http://example.com/")
+    val db = connection.getWritableDatabase
+    val id = db.insertOrThrow(TABLE_NAME, null, values)
+    val new_uri = ContentUris.withAppendedId(CONTENT_URI, id)
+    getContext.getContentResolver.notifyChange(new_uri, null)
+    new_uri
   }
 
   def update(uri: Uri, values: ContentValues, where: String, whereArgs: Array[String]): Int = {
@@ -57,7 +76,11 @@ class ArticleProvider extends ContentProvider {
   }
 
   def getType(uri: Uri): String = {
-    "example"
+    matcher `match` uri match {
+      case INDEX => CONTENT_TYPE
+      case SHOW  => CONTENT_ITEM_TYPE
+      case _     => throw new IllegalArgumentException("Unknown URI " + uri)
+    }
   }
 
   def query(uri: Uri, projection: Array[String], where: String, whereArgs: Array[String], sortOrder: String): Cursor = {
@@ -67,7 +90,11 @@ class ArticleProvider extends ContentProvider {
 
   protected class Database(context: Context) extends SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
     def onCreate(db: SQLiteDatabase) {
+      val sql = "CREATE TABLE " + TABLE_NAME +
+      "(" + FIELDS.map(field => field + " varchar(255)" ).mkString(", ") + ");"
+      db.execSQL(sql)
     }
+
     def onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
     }
   }

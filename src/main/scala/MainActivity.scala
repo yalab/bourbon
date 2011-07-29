@@ -2,6 +2,7 @@ package org.yalab.bourbon
 
 import java.lang.Runnable
 import _root_.android.app.{Activity, ProgressDialog}
+import _root_.android.content.{ContentValues}
 import _root_.android.os.Bundle
 import _root_.android.widget.TextView
 import _root_.android.view.{Menu, MenuItem}
@@ -29,8 +30,12 @@ class MainActivity extends Activity {
                                          "Downloading. Please wait...", true, true)
         (new Thread(new Runnable(){
           def run() {
-            val articles = ArticleProvider.download
-            println(articles)
+            val resolver = getContentResolver
+            ArticleProvider.download.foreach(article => {
+              val values = new ContentValues
+              article.foreach{case(k, v) => values.put(k, v.toString)}
+              resolver.insert(ArticleProvider.CONTENT_URI, values)
+            })
             dialog.dismiss
           }
         })).start
