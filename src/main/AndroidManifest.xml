@@ -2,10 +2,23 @@
 android:versionName="0.1" android:versionCode="1" package="org.yalab.bourbon" xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-sdk android:minSdkVersion="7"></uses-sdk>
     <application android:icon="@drawable/android:star_big_on" android:label="@string/app_name">
-        <activity android:label="@string/app_name" android:name=".MainActivity">
+        <activity android:label="@string/app_name"
+                  android:name=".MainActivity"
+                  android:theme="@android:style/Theme.Light">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"></action>
                 <category android:name="android.intent.category.LAUNCHER"></category>
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".ArticleActivity"
+                  android:label="@string/app_name"
+                  android:theme="@android:style/Theme.Light">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="vnd.android.cursor.item/org.yalab.bourbon" />
             </intent-filter>
         </activity>
         <provider android:name="ArticleProvider" android:authorities="org.yalab.bourbon"></provider>

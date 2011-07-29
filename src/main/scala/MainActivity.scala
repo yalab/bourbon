@@ -2,10 +2,10 @@ package org.yalab.bourbon
 
 import java.lang.Runnable
 import _root_.android.app.{Activity, ListActivity, ProgressDialog}
-import _root_.android.content.{ContentValues}
+import _root_.android.content.{ContentValues, Intent, ContentUris}
 import _root_.android.os.{Bundle, Handler}
 import _root_.android.widget.{TextView, ListView, SimpleCursorAdapter}
-import _root_.android.view.{Menu, MenuItem}
+import _root_.android.view.{Menu, MenuItem, View}
 
 object MainActivity {
   final val OPTION_DOWNLOAD = Menu.FIRST
@@ -17,6 +17,10 @@ class MainActivity extends ListActivity {
 
   override def onCreate(savedInstanceState: Bundle) {
     super.onCreate(savedInstanceState)
+    val intent = getIntent
+    if(intent.getData == null){
+      intent.setData(ArticleProvider.CONTENT_URI)
+    }
     render
   }
 
@@ -55,5 +59,10 @@ class MainActivity extends ListActivity {
         true
       }
     }
+  }
+
+  override def onListItemClick(l: ListView, v: View, position: Int, id: Long) {
+    val uri = ContentUris.withAppendedId(getIntent.getData, id)
+    startActivity(new Intent(Intent.ACTION_VIEW, uri))
   }
 }
