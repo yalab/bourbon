@@ -4,6 +4,7 @@ import _root_.android.content.{ContentProvider, ContentValues, ContentUris, Cont
 import _root_.android.database.Cursor
 import _root_.android.database.sqlite.{SQLiteDatabase, SQLiteOpenHelper}
 import _root_.android.net.Uri
+import _root_.android.provider.BaseColumns
 import java.net.URL
 import scala.io.Source
 import scala.xml.XML
@@ -83,15 +84,22 @@ class ArticleProvider extends ContentProvider {
     }
   }
 
-  def query(uri: Uri, projection: Array[String], where: String, whereArgs: Array[String], sortOrder: String): Cursor = {
-    val ary = new Array[java.lang.String](0)
-    (new Database(getContext)).getReadableDatabase.rawQuery("", ary)
+  def query(uri: Uri, fields: Array[String], where: String, whereArgs: Array[String], sortOrder: String): Cursor = {
+    val db = connection.getReadableDatabase
+    // matcher `match` uri match {
+    //   case INDEX => {
+    //   }
+    //   case SHOW  => {
+    //   }
+    //   case _     => throw new IllegalArgumentException("Unknown URI " + uri)
+    // }
+    db.query(TABLE_NAME, Array("_id") ++ fields, null, null, null, null, "date")
   }
 
   protected class Database(context: Context) extends SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
     def onCreate(db: SQLiteDatabase) {
       val sql = "CREATE TABLE " + TABLE_NAME +
-      "(" + FIELDS.map(field => field + " varchar(255)" ).mkString(", ") + ");"
+      "(" + BaseColumns._ID + " INTEGER PRIMARY KEY," + FIELDS.map(field => field + " varchar(255)" ).mkString(", ") + ");"
       db.execSQL(sql)
     }
 

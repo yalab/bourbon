@@ -1,20 +1,25 @@
 package org.yalab.bourbon
 
 import java.lang.Runnable
-import _root_.android.app.{Activity, ProgressDialog}
+import _root_.android.app.{Activity, ListActivity, ProgressDialog}
 import _root_.android.content.{ContentValues}
 import _root_.android.os.Bundle
-import _root_.android.widget.TextView
+import _root_.android.widget.{TextView, ListView, SimpleCursorAdapter}
 import _root_.android.view.{Menu, MenuItem}
 
 object MainActivity {
   final val OPTION_DOWNLOAD = Menu.FIRST
 }
 
-class MainActivity extends Activity {
+class MainActivity extends ListActivity {
   import MainActivity._
   override def onCreate(savedInstanceState: Bundle) {
     super.onCreate(savedInstanceState)
+    val c = getContentResolver.query(ArticleProvider.CONTENT_URI, Array("title"), null, null, null)
+
+    val adapter = new SimpleCursorAdapter(this, R.layout.row, c,
+                                          Array("title"), Array(_root_.android.R.id.title))
+    setListAdapter(adapter)
   }
 
   override def onCreateOptionsMenu(menu: Menu): Boolean = {
@@ -44,4 +49,3 @@ class MainActivity extends Activity {
     }
   }
 }
-
