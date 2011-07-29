@@ -11,13 +11,12 @@ import scala.xml.XML
 object ArticleProvider{
   final val DATABASE_NAME    = "bourbon.db"
   final val DATABASE_VERSION = 1
+  val FIELDS = List("title", "link", "description", "guid", "category", "encoded", "date", "enclosure", "mp3", "script")
 
   def download() = {
     val url = "http://www.voanews.com/templates/Articles.rss?sectionPath=/learningenglish/home"
-    val feed = XML.load(new URL(url))
-    feed \ "channel" \ "item" map(item => {
-      val fields = List("title", "link", "description", "guid", "category", "encoded", "date", "enclosure", "mp3", "script")
-      fields.map(k => {
+    XML.load(new URL(url)) \ "channel" \ "item" map(item => {
+      FIELDS.map(k => {
         val v = k match {
           case "enclosure" => item \ k \ "@url"
           case "mp3"       => {
