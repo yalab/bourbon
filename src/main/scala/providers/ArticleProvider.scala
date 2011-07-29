@@ -16,9 +16,22 @@ object ArticleProvider{
     val url = "http://www.voanews.com/templates/Articles.rss?sectionPath=/learningenglish/home"
     val feed = XML.load(new URL(url))
     feed \ "channel" \ "item" map(item => {
-      val fields = List("title", "link", "description", "guid", "category", "encoded", "date", "enclosure")
+      val fields = List("title", "link", "description", "guid", "category", "encoded", "date", "enclosure", "mp3", "script")
       fields.map(k => {
-        val v = if (k == "enclosure") item \ k \ "@url" else (item \ k).head.text
+        val v = k match {
+          case "enclosure" => item \ k \ "@url"
+          case "mp3"       => {
+            val encoded = XML.loadString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<root>" + (item \ "encoded").head.text + "</root>")
+
+            val flashvars = (encoded \\ "param" filter(node => (node \ "@name").toString == "flashvars")) \ "@value"
+            flashvars.toString.split("&").map(str => str.split("=")).filter(a => a(0) == "file")(0)(1)
+          }
+          case "script"    => {
+            val encoded = XML.loadString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<root>" + (item \ "encoded").head.text + "</root>")
+            (encoded \\ "p").map(node => node.text).mkString("\n")
+          }
+          case _           => (item \ k).head.text
+        }
         (k, v)
       }).toMap
     })
