@@ -37,7 +37,7 @@ object ArticleProvider{
           }
           case "script"    => {
             val encoded = XML.loadString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<root>" + (item \ "encoded").head.text + "</root>")
-            (encoded \\ "p").map(node => node.text).mkString("\n")
+            (encoded \\ "p").map(node => node.text).mkString("\n\n")
           }
           case _           => (item \ k).head.text
         }
