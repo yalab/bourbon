@@ -3,4 +3,19 @@
     android:orientation="vertical"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent">
+  <TextView
+      android:id="@+id/title"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"
+      />
+  <TextView
+      android:id="@+id/script"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"
+      />
+  <TextView
+      android:id="@+id/mp3"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"
+      />
 </LinearLayout>

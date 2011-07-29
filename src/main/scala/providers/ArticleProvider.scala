@@ -86,14 +86,17 @@ class ArticleProvider extends ContentProvider {
 
   def query(uri: Uri, fields: Array[String], where: String, whereArgs: Array[String], sortOrder: String): Cursor = {
     val db = connection.getReadableDatabase
-    // matcher `match` uri match {
-    //   case INDEX => {
-    //   }
-    //   case SHOW  => {
-    //   }
-    //   case _     => throw new IllegalArgumentException("Unknown URI " + uri)
-    // }
-    db.query(TABLE_NAME, Array("_id") ++ fields, null, null, null, null, "date")
+    matcher `match` uri match {
+      case INDEX => {
+        db.query(TABLE_NAME, Array("_id") ++ fields, null, null, null, null, "date")
+      }
+      case SHOW  => {
+        val id = uri.getPathSegments().get(1)
+        db.query(TABLE_NAME, Array("_id") ++ fields, "_id = ?", Array(id), null, null, "date")
+      }
+      case _     => throw new IllegalArgumentException("Unknown URI " + uri)
+    }
+
   }
 
   protected class Database(context: Context) extends SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
