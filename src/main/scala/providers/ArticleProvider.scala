@@ -21,22 +21,20 @@ object ArticleProvider{
   final val INDEX = 1
   final val SHOW  = 2
 
-  val FIELDS = List("title", "link", "description", "guid", "category", "encoded", "date", "enclosure", "mp3", "script")
+  val FIELDS = List("title", "link", "description", "guid", "category", "date", "enclosure", "mp3", "script")
 
   def download() = {
     val url = "http://www.voanews.com/templates/Articles.rss?sectionPath=/learningenglish/home"
     XML.load(new URL(url)) \ "channel" \ "item" map(item => {
+      val encoded = XML.loadString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<root>" + (item \ "encoded").head.text + "</root>")
       FIELDS.map(k => {
         val v = k match {
           case "enclosure" => item \ k \ "@url"
           case "mp3"       => {
-            val encoded = XML.loadString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<root>" + (item \ "encoded").head.text + "</root>")
-
             val flashvars = (encoded \\ "param" filter(node => (node \ "@name").toString == "flashvars")) \ "@value"
             flashvars.toString.split("&").map(str => str.split("=")).filter(a => a(0) == "file")(0)(1)
           }
           case "script"    => {
-            val encoded = XML.loadString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<root>" + (item \ "encoded").head.text + "</root>")
             (encoded \\ "p").map(node => node.text).mkString("\n\n")
           }
           case _           => (item \ k).head.text
