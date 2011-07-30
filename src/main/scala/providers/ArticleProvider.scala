@@ -35,7 +35,9 @@ object ArticleProvider{
             flashvars.toString.split("&").map(str => str.split("=")).filter(a => a(0) == "file")(0)(1)
           }
           case "script"    => {
-            (encoded \\ "p").map(node => node.text).mkString("\n\n")
+            (encoded \\ "p").map(node => {
+              "<p>" + node.text.split(" ").map(word => "<a href=\"" + word + "\" onClick=\"return false\">" + word + "</a>").mkString(" ") + "</p>"
+            }).mkString("\n\n")
           }
           case _           => (item \ k).head.text
         }
@@ -43,6 +45,29 @@ object ArticleProvider{
       }).toMap
     })
   }
+
+  val html_header = """
+<!DOCTYPE html>
+<html>
+<head>
+  <title>org.yalab.bourbon</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <style type="text/css">
+a{
+  text-decoration: none;
+  color: #0F0F0F;
+}
+  </style>
+</head>
+<body>
+<div id="content">
+  """
+  val html_footer = """
+</div>
+</body>
+</html>
+  """
 }
 
 class ArticleProvider extends ContentProvider {
