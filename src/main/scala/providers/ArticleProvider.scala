@@ -111,11 +111,11 @@ class ArticleProvider extends ContentProvider {
     val db = connection.getReadableDatabase
     matcher `match` uri match {
       case INDEX => {
-        db.query(TABLE_NAME, Array("_id") ++ fields, null, null, null, null, "date")
+        db.query(TABLE_NAME, Array("_id") ++ fields, where, whereArgs, null, null, "date DESC")
       }
       case SHOW  => {
         val id = uri.getPathSegments().get(1)
-        db.query(TABLE_NAME, Array("_id") ++ fields, "_id = ?", Array(id), null, null, "date")
+        db.query(TABLE_NAME, Array("_id") ++ fields, "_id = ?", Array(id), null, null, null)
       }
       case _     => throw new IllegalArgumentException("Unknown URI " + uri)
     }

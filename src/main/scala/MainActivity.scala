@@ -50,7 +50,10 @@ class MainActivity extends ListActivity {
             ArticleProvider.download.foreach(article => {
               val values = new ContentValues
               article.foreach{case(k, v) => values.put(k, v.toString)}
-              resolver.insert(ArticleProvider.CONTENT_URI, values)
+              val c = resolver.query(ArticleProvider.CONTENT_URI, Array(), "guid = ?", Array(article("guid").toString), null)
+              if(c.getCount < 1){
+                resolver.insert(ArticleProvider.CONTENT_URI, values)
+              }
             })
             dialog.dismiss
             handler.post(new Runnable() { def run { render } });
