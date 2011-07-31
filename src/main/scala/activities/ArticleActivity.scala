@@ -19,8 +19,7 @@ class ArticleActivity extends Activity {
     val c = getContentResolver.query(getIntent.getData, fields, null, null, null)
     c.moveToFirst
     val script = c.getString(c.getColumnIndex("script"))
-    //val mp3    = c.getString(c.getColumnIndex("mp3"))
-    val mp3 = "http://www.google.co.jp/images/srpr/logo2w.png"
+    val mp3    = c.getString(c.getColumnIndex("mp3"))
     val id     = c.getString(c.getColumnIndex("_id"))
 
     val dir =  new File(List(Environment.getExternalStorageDirectory, "Android", "data", "org.yalab.bourbon", "cache").mkString("/"))
@@ -30,13 +29,14 @@ class ArticleActivity extends Activity {
     if(path.exists == false){
       try{
         val stream = new BufferedInputStream((new URL(mp3)).openStream)
-        val binary = Stream.continually{ stream.read }.takeWhile{ -1 != }.map{ _.byteValue}.toArray
         val file = new BufferedOutputStream(new FileOutputStream(path))
-        file.write(binary)
+        var binary:Int = 0
+        while({binary = stream.read; binary != -1}){
+          file.write(binary)
+        }
         file.close
       }
     }
-
 
     val webview = findViewById(R.id.webview).asInstanceOf[WebView]
     webview.getSettings.setJavaScriptEnabled(true)
