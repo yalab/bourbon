@@ -1,21 +1,43 @@
 package org.yalab.bourbon
 
 import _root_.android.app.Activity
-import _root_.android.os.Bundle
+import _root_.android.os.{Bundle, Environment}
 import _root_.android.view.{View, KeyEvent}
 import _root_.android.view.View.OnLongClickListener
 import _root_.android.widget.TextView
 import _root_.android.webkit.WebView
+import scala.io.Source
+import java.io.{BufferedOutputStream, BufferedInputStream, File, FileOutputStream}
+import java.net.URL
 
 class ArticleActivity extends Activity {
 
   override def onCreate(savedInstanceState: Bundle) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.article)
-    val fields = Array("script")
+    val fields = Array("script", "mp3")
     val c = getContentResolver.query(getIntent.getData, fields, null, null, null)
     c.moveToFirst
     val script = c.getString(c.getColumnIndex("script"))
+    //val mp3    = c.getString(c.getColumnIndex("mp3"))
+    val mp3 = "http://www.google.co.jp/images/srpr/logo2w.png"
+    val id     = c.getString(c.getColumnIndex("_id"))
+
+    val dir =  new File(List(Environment.getExternalStorageDirectory, "Android", "data", "org.yalab.bourbon", "cache").mkString("/"))
+    if(dir.exists == false){ dir.mkdirs }
+
+    val path = new File(dir, id + ".mp3")
+    if(path.exists == false){
+      try{
+        val stream = new BufferedInputStream((new URL(mp3)).openStream)
+        val binary = Stream.continually{ stream.read }.takeWhile{ -1 != }.map{ _.byteValue}.toArray
+        val file = new BufferedOutputStream(new FileOutputStream(path))
+        file.write(binary)
+        file.close
+      }
+    }
+
+
     val webview = findViewById(R.id.webview).asInstanceOf[WebView]
     webview.getSettings.setJavaScriptEnabled(true)
     webview.getSettings.setUseWideViewPort(true)
