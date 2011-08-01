@@ -16,17 +16,31 @@ class ArticleActivity extends Activity {
   var mDuration: Int = 0
   var mSeeking: Boolean = false
   var mSeekBar: SeekBar = null
+  var mProgressRefresher: Handler = null
 
   val seekListener = new OnSeekBarChangeListener{
-    def onStopTrackingTouch(bar: SeekBar){
-      mSeeking = false
-    }
     def onStartTrackingTouch(bar: SeekBar){
       mSeeking = true
     }
 
+    def onStopTrackingTouch(bar: SeekBar){
+      mSeeking = false
+    }
+
     def onProgressChanged(bar: SeekBar, progress: Int, fromuser: Boolean){
-      mPlayer.seekTo(progress);
+      if(!fromuser){ return }
+      mPlayer.seekTo(progress)
+    }
+  }
+
+  class ProgressRefresher extends Runnable{
+    def run{
+      if(mPlayer != null && !mSeeking && mDuration != 0){
+        val progress = mPlayer.getCurrentPosition / mDuration
+        mSeekBar.setProgress(mPlayer.getCurrentPosition)
+      }
+      mProgressRefresher.removeCallbacksAndMessages(null);
+      mProgressRefresher.postDelayed(new ProgressRefresher, 200);
     }
   }
 
@@ -56,6 +70,9 @@ class ArticleActivity extends Activity {
 
             mSeekBar.setMax(mDuration)
             mSeekBar.setOnSeekBarChangeListener(seekListener)
+
+            mProgressRefresher = new Handler
+            mProgressRefresher.postDelayed(new ProgressRefresher, 200)
             dialog.dismiss
           }
         });
