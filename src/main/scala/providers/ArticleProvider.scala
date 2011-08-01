@@ -4,10 +4,13 @@ import _root_.android.content.{ContentProvider, ContentValues, ContentUris, Cont
 import _root_.android.database.Cursor
 import _root_.android.database.sqlite.{SQLiteDatabase, SQLiteOpenHelper}
 import _root_.android.net.Uri
+import _root_.android.os.Environment
 import _root_.android.provider.BaseColumns
 import java.net.URL
 import scala.io.Source
 import scala.xml.XML
+import java.io.{BufferedOutputStream, BufferedInputStream, File, FileOutputStream}
+import java.net.URL
 
 object ArticleProvider{
   final val DATABASE_NAME    = "bourbon.db"
@@ -44,6 +47,25 @@ object ArticleProvider{
         (k, v)
       }).toMap
     })
+  }
+
+  def fetch_mp3(id: String, mp3: String) = {
+    val dir =  new File(List(Environment.getExternalStorageDirectory, "Android", "data", "org.yalab.bourbon", "cache").mkString("/"))
+    if(dir.exists == false){ dir.mkdirs }
+
+    val path = new File(dir, id + ".mp3")
+    if(path.exists == false){
+      try{
+        val stream = new BufferedInputStream((new URL(mp3)).openStream)
+        val file = new BufferedOutputStream(new FileOutputStream(path))
+        var binary:Int = 0
+        while({binary = stream.read; binary != -1}){
+          file.write(binary)
+        }
+        file.close
+      }
+    }
+    path
   }
 
   val html_header = """
