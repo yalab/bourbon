@@ -4,7 +4,7 @@ import _root_.android.app.Activity
 import _root_.android.os.{Bundle}
 import _root_.android.view.{View, KeyEvent}
 import _root_.android.view.View.OnLongClickListener
-import _root_.android.widget.TextView
+import _root_.android.widget.SeekBar
 import _root_.android.webkit.WebView
 import scala.io.Source
 
@@ -37,6 +37,9 @@ class ArticleActivity extends Activity {
         true
       }
     })
+
+    val seekbar = findViewById(R.id.seekbar).asInstanceOf[SeekBar]
+    seekbar.setMax(100)
   }
 
   override def onKeyDown(key_code: Int, event: KeyEvent ): Boolean = {
