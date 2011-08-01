@@ -1,17 +1,34 @@
 package org.yalab.bourbon
 
-import _root_.android.app.Activity
+import _root_.android.app.{Activity, ProgressDialog}
 import _root_.android.media.MediaPlayer
-import _root_.android.os.{Bundle}
+import _root_.android.os.{Bundle, Handler}
 import _root_.android.view.{View, KeyEvent}
 import _root_.android.view.View.OnLongClickListener
 import _root_.android.widget.{SeekBar, ImageButton}
+import _root_.android.widget.SeekBar.OnSeekBarChangeListener
 import _root_.android.webkit.WebView
 import scala.io.Source
 
 class ArticleActivity extends Activity {
-  var player: MediaPlayer = null
-  var play_button: ImageButton = null
+  var mPlayer: MediaPlayer = null
+  var mPlayButton: ImageButton = null
+  var mDuration: Int = 0
+  var mSeeking: Boolean = false
+  var mSeekBar: SeekBar = null
+
+  val seekListener = new OnSeekBarChangeListener{
+    def onStopTrackingTouch(bar: SeekBar){
+      mSeeking = false
+    }
+    def onStartTrackingTouch(bar: SeekBar){
+      mSeeking = true
+    }
+
+    def onProgressChanged(bar: SeekBar, progress: Int, fromuser: Boolean){
+      mPlayer.seekTo(progress);
+    }
+  }
 
   override def onCreate(savedInstanceState: Bundle) {
     super.onCreate(savedInstanceState);
@@ -22,15 +39,28 @@ class ArticleActivity extends Activity {
     val script = c.getString(c.getColumnIndex("script"))
     val mp3    = c.getString(c.getColumnIndex("mp3"))
     val id     = c.getString(c.getColumnIndex("_id"))
+    val handler = new Handler
+    val dialog = ProgressDialog.show(ArticleActivity.this, "",
+                                     "Downloading MP3 file.\nPlease wait a few minutes...", true, true)
+    (new Thread(new Runnable(){
+      def run() {
+        val path = ArticleProvider.fetch_mp3(id, mp3)
+        handler.post(new Runnable() {
+          def run {
+            mPlayer = new MediaPlayer
+            mPlayer.setDataSource(path.toString)
+            mPlayer.prepare
+            mPlayButton = findViewById(R.id.play_button).asInstanceOf[ImageButton]
+            mSeekBar = findViewById(R.id.seekbar).asInstanceOf[SeekBar]
+            mDuration = mPlayer.getDuration
 
-    val path = ArticleProvider.fetch_mp3(id, mp3)
-
-    if(player == null){
-      player = new MediaPlayer
-      player.setDataSource(path.toString)
-      player.prepare
-    }
-    play_button = findViewById(R.id.play_button).asInstanceOf[ImageButton]
+            mSeekBar.setMax(mDuration)
+            mSeekBar.setOnSeekBarChangeListener(seekListener)
+            dialog.dismiss
+          }
+        });
+      }
+    })).start
 
     val webview = findViewById(R.id.webview).asInstanceOf[WebView]
     webview.getSettings.setJavaScriptEnabled(true)
@@ -51,22 +81,25 @@ class ArticleActivity extends Activity {
 
   override def onKeyDown(key_code: Int, event: KeyEvent ): Boolean = {
     val webview = findViewById(R.id.webview).asInstanceOf[WebView]
-    if (key_code == KeyEvent.KEYCODE_BACK && webview.canGoBack) {
+    if(key_code == KeyEvent.KEYCODE_BACK && webview.canGoBack){
       webview.goBack
       true
     }else{
-      player.stop
+      if(mPlayer != null){
+        mPlayer.release
+        mPlayer = null
+      }
       super.onKeyDown(key_code, event);
     }
   }
 
   def pressPlay(view: View) {
-    if(player.isPlaying){
-      player.pause
-      play_button.setImageResource(R.drawable.play)
+    if(mPlayer.isPlaying){
+      mPlayer.pause
+      mPlayButton.setImageResource(R.drawable.play)
     }else{
-      play_button.setImageResource(R.drawable.pause)
-      player.start
+      mPlayButton.setImageResource(R.drawable.pause)
+      mPlayer.start
     }
   }
 }
