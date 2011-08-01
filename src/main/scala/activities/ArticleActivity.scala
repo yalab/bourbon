@@ -1,14 +1,17 @@
 package org.yalab.bourbon
 
 import _root_.android.app.Activity
+import _root_.android.media.MediaPlayer
 import _root_.android.os.{Bundle}
 import _root_.android.view.{View, KeyEvent}
 import _root_.android.view.View.OnLongClickListener
-import _root_.android.widget.SeekBar
+import _root_.android.widget.{SeekBar, ImageButton}
 import _root_.android.webkit.WebView
 import scala.io.Source
 
 class ArticleActivity extends Activity {
+  var player: MediaPlayer = null
+  var play_button: ImageButton = null
 
   override def onCreate(savedInstanceState: Bundle) {
     super.onCreate(savedInstanceState);
@@ -21,6 +24,13 @@ class ArticleActivity extends Activity {
     val id     = c.getString(c.getColumnIndex("_id"))
 
     val path = ArticleProvider.fetch_mp3(id, mp3)
+
+    if(player == null){
+      player = new MediaPlayer
+      player.setDataSource(path.toString)
+      player.prepare
+    }
+    play_button = findViewById(R.id.play_button).asInstanceOf[ImageButton]
 
     val webview = findViewById(R.id.webview).asInstanceOf[WebView]
     webview.getSettings.setJavaScriptEnabled(true)
@@ -37,9 +47,6 @@ class ArticleActivity extends Activity {
         true
       }
     })
-
-    val seekbar = findViewById(R.id.seekbar).asInstanceOf[SeekBar]
-    seekbar.setMax(100)
   }
 
   override def onKeyDown(key_code: Int, event: KeyEvent ): Boolean = {
@@ -48,7 +55,18 @@ class ArticleActivity extends Activity {
       webview.goBack
       true
     }else{
+      player.stop
       super.onKeyDown(key_code, event);
+    }
+  }
+
+  def pressPlay(view: View) {
+    if(player.isPlaying){
+      player.pause
+      play_button.setImageResource(R.drawable.play)
+    }else{
+      play_button.setImageResource(R.drawable.pause)
+      player.start
     }
   }
 }
