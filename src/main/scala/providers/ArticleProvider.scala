@@ -26,6 +26,7 @@ object ArticleProvider{
 
   val FIELDS = List("title", "link", "description", "guid", "category", "date", "enclosure", "mp3", "script")
 
+  val BufferSize = 8192 * 10 * 10
   def download() = {
     val url = "http://www.voanews.com/templates/Articles.rss?sectionPath=/learningenglish/home"
     XML.load(new URL(url)) \ "channel" \ "item" map(item => {
@@ -56,8 +57,8 @@ object ArticleProvider{
     val path = new File(dir, id + ".mp3")
     if(path.exists == false){
       try{
-        val stream = new BufferedInputStream((new URL(mp3)).openStream)
-        val file = new BufferedOutputStream(new FileOutputStream(path))
+        val stream = new BufferedInputStream((new URL(mp3)).openStream, BufferSize)
+        val file = new BufferedOutputStream(new FileOutputStream(path), BufferSize)
         var binary:Int = 0
         while({binary = stream.read; binary != -1}){
           file.write(binary)
