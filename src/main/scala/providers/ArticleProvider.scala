@@ -33,7 +33,8 @@ object ArticleProvider{
                    "date"          -> "TEXT",
                    "enclosure"     -> "TEXT",
                    "mp3"           -> "TEXT",
-                   "script"        -> "TEXT")
+                   "script"        -> "TEXT",
+                   "paragraph"     -> "INTEGER")
 
   val BufferSize = 8192 * 10 * 10
   def download() = {
@@ -42,7 +43,6 @@ object ArticleProvider{
       val encoded = XML.loadString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<root>" + (item \ "encoded").head.text + "</root>")
       FIELDS.keys.filter{_ != BaseColumns._ID}.map(k => {
         val v = k match {
-          case "enclosure" => item \ k \ "@url"
           case "mp3"       => {
             val flashvars = (encoded \\ "param" filter(node => (node \ "@name").toString == "flashvars")) \ "@value"
             flashvars.toString.split("&").map(str => str.split("=")).filter(a => a(0) == "file")(0)(1)
@@ -52,6 +52,8 @@ object ArticleProvider{
               "<p>" + node.text.split(" ").map(word => "<a href=\"" + word + "\" onClick=\"return false\">" + word + "</a>").mkString(" ") + "</p>"
             }).mkString("\n\n")
           }
+          case "enclosure" => item \ k \ "@url"
+          case "paragraph" => (encoded \\ "p").length
           case _           => (item \ k).head.text
         }
         (k, v)
