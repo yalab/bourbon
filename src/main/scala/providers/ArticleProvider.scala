@@ -32,6 +32,8 @@ object ArticleProvider{
 
   final val mEqualPlaceHolder = "= ?"
   final val mMP3Dir           = "/Android/data/%s/files/".format(AUTHORITY)
+  final val mRssURL           = "http://www.voanews.com/templates/Articles.rss?sectionPath=/learningenglish/home"
+
 
   val FIELDS = Map(BaseColumns._ID -> "INTEGER PRIMARY KEY",
                    F_TITLE         -> "TEXT",
@@ -47,8 +49,8 @@ object ArticleProvider{
 
   val BufferSize = 8192 * 10 * 10
   def download() = {
-    val url = "http://www.voanews.com/templates/Articles.rss?sectionPath=/learningenglish/home"
-    XML.load(new URL(url)) \ "channel" \ "item" map(item => {
+    val stream = new BufferedInputStream((new URL(mRssURL)).openStream, BufferSize)
+    XML.load(stream) \ "channel" \ "item" map(item => {
       val encoded = XML.loadString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<root>" + (item \ "encoded").head.text + "</root>")
       FIELDS.keys.filter{_ != BaseColumns._ID}.map(k => {
         val v = k match {
