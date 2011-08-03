@@ -105,15 +105,16 @@ class ArticleActivity extends Activity {
           mWebView.goBack
           true
         }else{
-          if(mPlayer != null){
-            mPlayer.release
-            mPlayer = null
-          }
           super.onKeyDown(keyCode, event)
         }
       }
       case _ => super.onKeyDown(keyCode, event)
     }
+  }
+
+  override def onStop{
+    super.onStop
+    mPlayer.stop
   }
 
   def pressPlay(view: View) {
