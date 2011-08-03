@@ -83,7 +83,7 @@ class ArticleActivity extends Activity {
     webview.getSettings.setJavaScriptEnabled(true)
     webview.getSettings.setUseWideViewPort(true)
 
-    webview.loadData(ArticleProvider.html_header + script + ArticleProvider.html_footer, "text/html", "utf-8")
+    webview.loadData(ArticleProvider.htmlHeader + script + ArticleProvider.htmlFooter, "text/html", "utf-8")
 
     webview.setOnLongClickListener(new OnLongClickListener{
       override def onLongClick(v: View) = {

@@ -51,7 +51,7 @@ object ArticleProvider{
   }
 
   def fetch_mp3(id: String, mp3: String) = {
-    val dir =  new File(List(Environment.getExternalStorageDirectory, "Android", "data", "org.yalab.bourbon", "cache").mkString("/"))
+    val dir =  new File(List(Environment.getExternalStorageDirectory, "LettsVOA").mkString("/"))
     if(dir.exists == false){ dir.mkdirs }
 
     val path = new File(dir, id + ".mp3")
@@ -69,7 +69,7 @@ object ArticleProvider{
     path
   }
 
-  val html_header = """
+  val htmlHeader = """
 <!DOCTYPE html>
 <html>
 <head>
@@ -86,7 +86,7 @@ a{
 <body>
 <div id="content">
   """
-  val html_footer = """
+  val htmlFooter = """
 </div>
 </body>
 </html>
