@@ -6,9 +6,10 @@ import _root_.android.database.sqlite.{SQLiteDatabase, SQLiteOpenHelper}
 import _root_.android.net.Uri
 import _root_.android.os.Environment
 import _root_.android.provider.BaseColumns
+import _root_.android.util.Log
 import java.net.URL
 import scala.io.Source
-import scala.xml.XML
+import scala.xml.{XML, Elem}
 import java.io.{BufferedOutputStream, BufferedInputStream, File, FileOutputStream}
 import java.net.URL
 
@@ -50,7 +51,18 @@ object ArticleProvider{
   val BufferSize = 8192 * 10 * 10
   def download() = {
     val stream = new BufferedInputStream((new URL(mRssURL)).openStream, BufferSize)
-    XML.load(stream) \ "channel" \ "item" map(item => {
+    var xml: Elem = null
+    try{
+      xml = XML.load(stream)
+    }catch{
+      case e => {
+        stream.close
+        throw e
+      }
+    }finally{
+      stream.close
+    }
+    xml \ "channel" \ "item" map(item => {
       val encoded = XML.loadString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<root>" + (item \ "encoded").head.text + "</root>")
       FIELDS.keys.filter{_ != BaseColumns._ID}.map(k => {
         val v = k match {
