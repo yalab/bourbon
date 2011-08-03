@@ -24,14 +24,23 @@ object ArticleProvider{
   final val INDEX = 1
   final val SHOW  = 2
 
-  val FIELDS = List("title", "link", "description", "guid", "category", "date", "enclosure", "mp3", "script")
+  val FIELDS = Map(BaseColumns._ID -> "INTEGER PRIMARY KEY",
+                   "title"         -> "TEXT",
+                   "link"          -> "TEXT",
+                   "description"   -> "TEXT",
+                   "guid"          -> "INTEGER",
+                   "category"      -> "TEXT",
+                   "date"          -> "TEXT",
+                   "enclosure"     -> "TEXT",
+                   "mp3"           -> "TEXT",
+                   "script"        -> "TEXT")
 
   val BufferSize = 8192 * 10 * 10
   def download() = {
     val url = "http://www.voanews.com/templates/Articles.rss?sectionPath=/learningenglish/home"
     XML.load(new URL(url)) \ "channel" \ "item" map(item => {
       val encoded = XML.loadString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<root>" + (item \ "encoded").head.text + "</root>")
-      FIELDS.map(k => {
+      FIELDS.keys.filter{_ != BaseColumns._ID}.map(k => {
         val v = k match {
           case "enclosure" => item \ k \ "@url"
           case "mp3"       => {
@@ -147,9 +156,10 @@ class ArticleProvider extends ContentProvider {
 
   protected class Database(context: Context) extends SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
     def onCreate(db: SQLiteDatabase) {
-      val sql = "CREATE TABLE " + TABLE_NAME +
-      "(" + BaseColumns._ID + " INTEGER PRIMARY KEY," + FIELDS.map(field => field + " varchar(255)" ).mkString(", ") + ");"
+      val sql = "CREATE TABLE %s (%s);".format(TABLE_NAME, FIELDS.map{case(k, v) => k + " " + v }.mkString(", "))
       db.execSQL(sql)
+      val index_column = "guid"
+      db.execSQL("CREATE INDEX %s_%s_ix ON %s(%s)".format(TABLE_NAME, index_column, TABLE_NAME, index_column))
     }
 
     def onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
