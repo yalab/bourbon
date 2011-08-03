@@ -3,6 +3,8 @@ package org.yalab.bourbon
 import _root_.android.app.{Activity, ListActivity, ProgressDialog}
 import _root_.android.content.{ContentValues, Intent, ContentUris, Context, ContentResolver}
 import _root_.android.database.Cursor
+import _root_.android.net.ConnectivityManager
+import _root_.android.net.wifi.WifiManager
 import _root_.android.os.{Bundle, Handler}
 import _root_.android.widget.{TextView, ListView, SimpleCursorAdapter, Toast}
 import _root_.android.view.{Menu, MenuItem, View}
@@ -47,10 +49,18 @@ class MainActivity extends ListActivity {
   override def onOptionsItemSelected(item: MenuItem): Boolean = {
     item.getItemId match {
       case OPTION_DOWNLOAD => {
-        val dialog = ProgressDialog.show(MainActivity.this, null,
-                                         mDownloadMessage, true, true)
+
+        val wifiState = getSystemService(Context.WIFI_SERVICE).asInstanceOf[WifiManager].getWifiState
+        val activeNetwork = getSystemService(Context.CONNECTIVITY_SERVICE).asInstanceOf[ConnectivityManager].getActiveNetworkInfo
+
+        if(activeNetwork == null && wifiState != WifiManager.WIFI_STATE_ENABLED){
+          Toast.makeText(MainActivity.this, getString(R.string.unknown_host_exeption_message), Toast.LENGTH_SHORT).show
+          return true
+        }
 
         (new Thread(new Runnable{
+          val dialog = ProgressDialog.show(MainActivity.this, null,
+                                           mDownloadMessage, true, true)
           def run{
             try{
               ArticleProvider.download.foreach(article => {
