@@ -98,16 +98,21 @@ class ArticleActivity extends Activity {
     })
   }
 
-  override def onKeyDown(key_code: Int, event: KeyEvent ): Boolean = {
-    if(key_code == KeyEvent.KEYCODE_BACK && mWebView.canGoBack){
-      mWebView.goBack
-      true
-    }else{
-      if(mPlayer != null){
-        mPlayer.release
-        mPlayer = null
+  override def onKeyDown(keyCode: Int, event: KeyEvent ): Boolean = {
+    keyCode match{
+      case KeyEvent.KEYCODE_BACK => {
+        if(mWebView.canGoBack){
+          mWebView.goBack
+          true
+        }else{
+          if(mPlayer != null){
+            mPlayer.release
+            mPlayer = null
+          }
+          super.onKeyDown(keyCode, event)
+        }
       }
-      super.onKeyDown(key_code, event);
+      case _ => super.onKeyDown(keyCode, event)
     }
   }
 
