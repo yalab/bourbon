@@ -2,7 +2,8 @@ package org.yalab.bourbon
 
 import java.lang.Runnable
 import _root_.android.app.{Activity, ListActivity, ProgressDialog}
-import _root_.android.content.{ContentValues, Intent, ContentUris}
+import _root_.android.content.{ContentValues, Intent, ContentUris, Context}
+import _root_.android.database.Cursor
 import _root_.android.os.{Bundle, Handler}
 import _root_.android.widget.{TextView, ListView, SimpleCursorAdapter}
 import _root_.android.view.{Menu, MenuItem, View}
@@ -25,10 +26,10 @@ class MainActivity extends ListActivity {
   }
 
   def render{
-    val c = getContentResolver.query(ArticleProvider.CONTENT_URI, Array("title"), null, null, null)
-
-    val adapter = new SimpleCursorAdapter(MainActivity.this, R.layout.row, c,
-                                          Array("title"), Array(_root_.android.R.id.title))
+    val fields = Array("title", "paragraph")
+    val c = getContentResolver.query(ArticleProvider.CONTENT_URI, fields, null, null, null)
+    val adapter = new ArticleAdapter(MainActivity.this, R.layout.row, c,
+                                     fields, Array(R.id.title, R.id.paragraph))
     setListAdapter(adapter)
   }
 
@@ -67,5 +68,21 @@ class MainActivity extends ListActivity {
   override def onListItemClick(l: ListView, v: View, position: Int, id: Long) {
     val uri = ContentUris.withAppendedId(getIntent.getData, id)
     startActivity(new Intent(Intent.ACTION_VIEW, uri))
+  }
+
+  class ArticleViewBinder extends SimpleCursorAdapter.ViewBinder{
+    def setViewValue(v: View, c: Cursor, columnIndex: Int): Boolean = {
+      val ix = c.getColumnIndex("paragraph")
+      if(ix != columnIndex){
+        return false
+      }
+      val n = c.getInt(columnIndex)
+      v.asInstanceOf[TextView].setText(n.toString + " paragraph")
+      true
+    }
+  }
+
+  class ArticleAdapter(context: Context, id: Int, c: Cursor, fields: Array[String], nodes: Array[Int]) extends SimpleCursorAdapter(context, id, c, fields, nodes){
+    setViewBinder(new ArticleViewBinder)
   }
 }
