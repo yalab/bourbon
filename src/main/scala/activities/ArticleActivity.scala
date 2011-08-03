@@ -1,7 +1,7 @@
 package org.yalab.bourbon
 
 import _root_.android.app.{Activity, ProgressDialog}
-import _root_.android.media.MediaPlayer
+import _root_.android.media.{MediaPlayer, AudioManager}
 import _root_.android.os.{Bundle, Handler}
 import _root_.android.provider.BaseColumns
 import _root_.android.view.{View, KeyEvent}
@@ -50,6 +50,7 @@ class ArticleActivity extends Activity {
   override def onCreate(savedInstanceState: Bundle) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.article)
+    setVolumeControlStream(AudioManager.STREAM_MUSIC)
     val fields = Array(ArticleProvider.F_SCRIPT, ArticleProvider.F_MP3)
     val c = getContentResolver.query(getIntent.getData, fields, null, null, null)
     c.moveToFirst
@@ -60,7 +61,7 @@ class ArticleActivity extends Activity {
     val dialog = ProgressDialog.show(ArticleActivity.this, null,
                                      mDownloadMessage, true, true)
     (new Thread(new Runnable(){
-      def run() {
+      def run {
         val path = ArticleProvider.fetch_mp3(id, mp3)
         handler.post(new Runnable() {
           def run {
