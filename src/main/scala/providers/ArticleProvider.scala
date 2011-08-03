@@ -23,18 +23,27 @@ object ArticleProvider{
 
   final val INDEX = 1
   final val SHOW  = 2
+  final val F_PARAGRAPH = "paragraph"
+  final val F_TITLE     = "title"
+  final val F_GUID      = "guid"
+  final val F_SCRIPT    = "script"
+  final val F_MP3       = "mp3"
+  final val F_ENCLOSURE = "enclosure"
+
+  final val mEqualPlaceHolder = "= ?"
+  final val mMP3Dir           = "/Android/data/%s/files/".format(AUTHORITY)
 
   val FIELDS = Map(BaseColumns._ID -> "INTEGER PRIMARY KEY",
-                   "title"         -> "TEXT",
+                   F_TITLE         -> "TEXT",
                    "link"          -> "TEXT",
                    "description"   -> "TEXT",
-                   "guid"          -> "INTEGER",
+                   F_GUID          -> "INTEGER",
                    "category"      -> "TEXT",
                    "date"          -> "TEXT",
-                   "enclosure"     -> "TEXT",
-                   "mp3"           -> "TEXT",
-                   "script"        -> "TEXT",
-                   "paragraph"     -> "INTEGER")
+                   F_ENCLOSURE     -> "TEXT",
+                   F_MP3           -> "TEXT",
+                   F_SCRIPT        -> "TEXT",
+                   F_PARAGRAPH     -> "INTEGER")
 
   val BufferSize = 8192 * 10 * 10
   def download() = {
@@ -43,17 +52,17 @@ object ArticleProvider{
       val encoded = XML.loadString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<root>" + (item \ "encoded").head.text + "</root>")
       FIELDS.keys.filter{_ != BaseColumns._ID}.map(k => {
         val v = k match {
-          case "mp3"       => {
+          case F_MP3       => {
             val flashvars = (encoded \\ "param" filter(node => (node \ "@name").toString == "flashvars")) \ "@value"
             flashvars.toString.split("&").map(str => str.split("=")).filter(a => a(0) == "file")(0)(1)
           }
-          case "script"    => {
+          case F_SCRIPT    => {
             (encoded \\ "p").map(node => {
               "<p>" + node.text.split(" ").map(word => "<a href=\"" + word + "\" onClick=\"return false\">" + word + "</a>").mkString(" ") + "</p>"
             }).mkString("\n\n")
           }
-          case "enclosure" => item \ k \ "@url"
-          case "paragraph" => (encoded \\ "p").length
+          case F_ENCLOSURE => item \ k \ "@url"
+          case F_PARAGRAPH => (encoded \\ "p").length
           case _           => (item \ k).head.text
         }
         (k, v)
@@ -62,7 +71,7 @@ object ArticleProvider{
   }
 
   def fetch_mp3(id: String, mp3: String) = {
-    val dir =  new File(List(Environment.getExternalStorageDirectory, "LettsVOA").mkString("/"))
+    val dir =  new File(List(Environment.getExternalStorageDirectory, mMP3Dir).mkString("/"))
     if(dir.exists == false){ dir.mkdirs }
 
     val path = new File(dir, id + ".mp3")
@@ -145,11 +154,11 @@ class ArticleProvider extends ContentProvider {
     val db = connection.getReadableDatabase
     matcher `match` uri match {
       case INDEX => {
-        db.query(TABLE_NAME, Array("_id") ++ fields, where, whereArgs, null, null, "date DESC")
+        db.query(TABLE_NAME, Array(BaseColumns._ID) ++ fields, where, whereArgs, null, null, "date DESC")
       }
       case SHOW  => {
         val id = uri.getPathSegments().get(1)
-        db.query(TABLE_NAME, Array("_id") ++ fields, "_id = ?", Array(id), null, null, null)
+        db.query(TABLE_NAME, Array(BaseColumns._ID) ++ fields, BaseColumns._ID + mEqualPlaceHolder, Array(id), null, null, null)
       }
       case _     => throw new IllegalArgumentException("Unknown URI " + uri)
     }
@@ -160,7 +169,7 @@ class ArticleProvider extends ContentProvider {
     def onCreate(db: SQLiteDatabase) {
       val sql = "CREATE TABLE %s (%s);".format(TABLE_NAME, FIELDS.map{case(k, v) => k + " " + v }.mkString(", "))
       db.execSQL(sql)
-      val index_column = "guid"
+      val index_column = ArticleProvider.F_GUID
       db.execSQL("CREATE INDEX %s_%s_ix ON %s(%s)".format(TABLE_NAME, index_column, TABLE_NAME, index_column))
     }
 

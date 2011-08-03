@@ -2,7 +2,7 @@ package org.yalab.bourbon
 
 import java.lang.Runnable
 import _root_.android.app.{Activity, ListActivity, ProgressDialog}
-import _root_.android.content.{ContentValues, Intent, ContentUris, Context}
+import _root_.android.content.{ContentValues, Intent, ContentUris, Context, ContentResolver}
 import _root_.android.database.Cursor
 import _root_.android.os.{Bundle, Handler}
 import _root_.android.widget.{TextView, ListView, SimpleCursorAdapter}
@@ -15,6 +15,8 @@ object MainActivity {
 class MainActivity extends ListActivity {
   import MainActivity._
   val handler = new Handler
+  val mDownloadMessage = "Downloading. Please wait..."
+  var mResolver: ContentResolver = null
 
   override def onCreate(savedInstanceState: Bundle) {
     super.onCreate(savedInstanceState)
@@ -22,12 +24,13 @@ class MainActivity extends ListActivity {
     if(intent.getData == null){
       intent.setData(ArticleProvider.CONTENT_URI)
     }
+    mResolver = getContentResolver
     render
   }
 
   def render{
-    val fields = Array("title", "paragraph")
-    val c = getContentResolver.query(ArticleProvider.CONTENT_URI, fields, null, null, null)
+    val fields = Array(ArticleProvider.F_TITLE, ArticleProvider.F_PARAGRAPH)
+    val c = mResolver.query(ArticleProvider.CONTENT_URI, fields, null, null, null)
     val adapter = new ArticleAdapter(MainActivity.this, R.layout.row, c,
                                      fields, Array(R.id.title, R.id.paragraph))
     setListAdapter(adapter)
@@ -42,18 +45,19 @@ class MainActivity extends ListActivity {
   override def onOptionsItemSelected(item: MenuItem): Boolean = {
     item.getItemId match {
       case OPTION_DOWNLOAD => {
-        val dialog = ProgressDialog.show(MainActivity.this, "",
-                                         "Downloading. Please wait...", true, true)
+        val dialog = ProgressDialog.show(MainActivity.this, null,
+                                         mDownloadMessage, true, true)
 
         (new Thread(new Runnable(){
           def run() {
-            val resolver = getContentResolver
             ArticleProvider.download.foreach(article => {
               val values = new ContentValues
               article.foreach{case(k, v) => values.put(k, v.toString)}
-              val c = resolver.query(ArticleProvider.CONTENT_URI, Array(), "guid = ?", Array(article("guid").toString), null)
+              val c = mResolver.query(ArticleProvider.CONTENT_URI, Array(),
+                                      ArticleProvider.F_GUID + ArticleProvider.mEqualPlaceHolder,
+                                      Array(article(ArticleProvider.F_GUID).toString), null)
               if(c.getCount < 1){
-                resolver.insert(ArticleProvider.CONTENT_URI, values)
+                mResolver.insert(ArticleProvider.CONTENT_URI, values)
               }
             })
             dialog.dismiss
@@ -71,13 +75,17 @@ class MainActivity extends ListActivity {
   }
 
   class ArticleViewBinder extends SimpleCursorAdapter.ViewBinder{
+    val mSeparator = " "
+    var mParagraphColumnIndex = -1
     def setViewValue(v: View, c: Cursor, columnIndex: Int): Boolean = {
-      val ix = c.getColumnIndex("paragraph")
-      if(ix != columnIndex){
-        return false
+      if(mParagraphColumnIndex == -1){
+        mParagraphColumnIndex = c.getColumnIndex(ArticleProvider.F_PARAGRAPH)
       }
+
+      if(mParagraphColumnIndex != columnIndex){ return false }
+
       val n = c.getInt(columnIndex)
-      v.asInstanceOf[TextView].setText(n.toString + " paragraph")
+      v.asInstanceOf[TextView].setText(n.toString + mSeparator + ArticleProvider.F_PARAGRAPH)
       true
     }
   }

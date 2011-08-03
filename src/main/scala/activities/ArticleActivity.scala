@@ -3,6 +3,7 @@ package org.yalab.bourbon
 import _root_.android.app.{Activity, ProgressDialog}
 import _root_.android.media.MediaPlayer
 import _root_.android.os.{Bundle, Handler}
+import _root_.android.provider.BaseColumns
 import _root_.android.view.{View, KeyEvent}
 import _root_.android.view.View.OnLongClickListener
 import _root_.android.widget.{SeekBar, ImageButton}
@@ -17,6 +18,8 @@ class ArticleActivity extends Activity {
   var mSeeking: Boolean = false
   var mSeekBar: SeekBar = null
   var mProgressRefresher: Handler = null
+  var mWebView: WebView = null
+  val mDownloadMessage = "Downloading MP3 file.\nPlease wait a few minutes..."
 
   val seekListener = new OnSeekBarChangeListener{
     def onStartTrackingTouch(bar: SeekBar){
@@ -47,15 +50,15 @@ class ArticleActivity extends Activity {
   override def onCreate(savedInstanceState: Bundle) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.article)
-    val fields = Array("script", "mp3")
+    val fields = Array(ArticleProvider.F_SCRIPT, ArticleProvider.F_MP3)
     val c = getContentResolver.query(getIntent.getData, fields, null, null, null)
     c.moveToFirst
-    val script = c.getString(c.getColumnIndex("script"))
-    val mp3    = c.getString(c.getColumnIndex("mp3"))
-    val id     = c.getString(c.getColumnIndex("_id"))
+    val script = c.getString(c.getColumnIndex(ArticleProvider.F_SCRIPT))
+    val mp3    = c.getString(c.getColumnIndex(ArticleProvider.F_MP3))
+    val id     = c.getString(c.getColumnIndex(BaseColumns._ID))
     val handler = new Handler
-    val dialog = ProgressDialog.show(ArticleActivity.this, "",
-                                     "Downloading MP3 file.\nPlease wait a few minutes...", true, true)
+    val dialog = ProgressDialog.show(ArticleActivity.this, null,
+                                     mDownloadMessage, true, true)
     (new Thread(new Runnable(){
       def run() {
         val path = ArticleProvider.fetch_mp3(id, mp3)
@@ -79,27 +82,25 @@ class ArticleActivity extends Activity {
       }
     })).start
 
-    val webview = findViewById(R.id.webview).asInstanceOf[WebView]
-    webview.getSettings.setJavaScriptEnabled(true)
-    webview.getSettings.setUseWideViewPort(true)
+    mWebView = findViewById(R.id.webview).asInstanceOf[WebView]
+    mWebView.getSettings.setJavaScriptEnabled(true)
+    mWebView.getSettings.setUseWideViewPort(true)
 
-    webview.loadData(ArticleProvider.htmlHeader + script + ArticleProvider.htmlFooter, "text/html", "utf-8")
+    mWebView.loadData(ArticleProvider.htmlHeader + script + ArticleProvider.htmlFooter, "text/html", "utf-8")
 
-    webview.setOnLongClickListener(new OnLongClickListener{
+    mWebView.setOnLongClickListener(new OnLongClickListener{
       override def onLongClick(v: View) = {
-        val webview =  v.asInstanceOf[WebView]
-        val hr = webview.getHitTestResult
+        val hr = mWebView.getHitTestResult
         val url = "http://eow.alc.co.jp/" + hr.getExtra.replace(".", "") + "/UTF-8/"
-        webview.loadUrl(url)
+        mWebView.loadUrl(url)
         true
       }
     })
   }
 
   override def onKeyDown(key_code: Int, event: KeyEvent ): Boolean = {
-    val webview = findViewById(R.id.webview).asInstanceOf[WebView]
-    if(key_code == KeyEvent.KEYCODE_BACK && webview.canGoBack){
-      webview.goBack
+    if(key_code == KeyEvent.KEYCODE_BACK && mWebView.canGoBack){
+      mWebView.goBack
       true
     }else{
       if(mPlayer != null){
