@@ -8,10 +8,10 @@ import _root_.android.os.Environment
 import _root_.android.provider.BaseColumns
 import _root_.android.util.Log
 import java.net.URL
-import scala.io.Source
 import scala.xml.{XML, Elem}
-import java.io.{BufferedOutputStream, BufferedInputStream, File, FileOutputStream}
-import java.net.URL
+import java.io.{File, FileOutputStream}
+import org.apache.http.impl.client.DefaultHttpClient
+import org.apache.http.client.methods.HttpGet
 
 object ArticleProvider{
   final val DATABASE_NAME    = "bourbon.db"
@@ -48,19 +48,13 @@ object ArticleProvider{
                    F_SCRIPT        -> "TEXT",
                    F_PARAGRAPH     -> "INTEGER")
 
-  val BufferSize = 8192 * 10 * 10
   def download() = {
-    val stream = new BufferedInputStream((new URL(mRssURL)).openStream, BufferSize)
+    val client = new DefaultHttpClient
     var xml: Elem = null
     try{
-      xml = XML.load(stream)
-    }catch{
-      case e => {
-        stream.close
-        throw e
-      }
-    }finally{
-      stream.close
+      val response = client.execute(new HttpGet(mRssURL))
+      val entity = response.getEntity
+      xml = XML.load(entity.getContent)
     }
     xml \ "channel" \ "item" map(item => {
       val encoded = XML.loadString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<root>" + (item \ "encoded").head.text + "</root>")
@@ -90,13 +84,13 @@ object ArticleProvider{
 
     val path = new File(dir, id + ".mp3")
     if(path.exists == false){
+      val file = new FileOutputStream(path)
+      val client = new DefaultHttpClient
       try{
-        val stream = new BufferedInputStream((new URL(mp3)).openStream, BufferSize)
-        val file = new BufferedOutputStream(new FileOutputStream(path), BufferSize)
-        var binary:Int = 0
-        while({binary = stream.read; binary != -1}){
-          file.write(binary)
-        }
+        val response = client.execute(new HttpGet(mp3))
+        response.getEntity.writeTo(file)
+        file.close
+      }finally{
         file.close
       }
     }
