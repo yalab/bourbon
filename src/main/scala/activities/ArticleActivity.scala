@@ -115,7 +115,9 @@ class ArticleActivity extends Activity {
 
   override def onStop{
     super.onStop
-    mPlayer.stop
+    if(mPlayer != null){
+      mPlayer.stop
+    }
   }
 
   def pressPlay(view: View) {
