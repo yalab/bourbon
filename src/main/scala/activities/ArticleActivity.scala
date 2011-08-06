@@ -88,7 +88,7 @@ class ArticleActivity extends Activity {
     mWebView.getSettings.setUseWideViewPort(true)
     mWebView.setWebViewClient(new WebViewClient)
     val js = """
-    location.href = 'http://eow.alc.co.jp/' + this.innerHTML + '/UTF-8/';
+    location.href = 'http://eow.alc.co.jp/' + word + '/UTF-8/';
     """
     mWebView.loadData(ArticleProvider.htmlHeader.format(js) + script + ArticleProvider.htmlFooter, "text/html", "utf-8")
   }
