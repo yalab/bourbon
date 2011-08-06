@@ -66,7 +66,7 @@ object ArticleProvider{
           }
           case F_SCRIPT    => {
             (encoded \\ "p").map(node => {
-              "<p>" + node.text.split(" ").map(word => "<a href=\"" + word + "\" onClick=\"return false\">" + word + "</a>").mkString(" ") + "</p>"
+              "<p>" + node.text.split(" ").map(word => "<span onclick='search()'>%s</span>".format(word)).mkString(" ") + "</p>"
             }).mkString("\n\n")
           }
           case F_ENCLOSURE => item \ k \ "@url"
@@ -110,6 +110,12 @@ a{
   color: #0F0F0F;
 }
   </style>
+  <script type="text/javascript">
+  function search(word){
+    %s
+    return false;
+  }
+  </script>
 </head>
 <body>
 <div id="content">

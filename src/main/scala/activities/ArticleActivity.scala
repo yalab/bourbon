@@ -8,7 +8,7 @@ import _root_.android.view.{View, KeyEvent}
 import _root_.android.view.View.OnLongClickListener
 import _root_.android.widget.{SeekBar, ImageButton}
 import _root_.android.widget.SeekBar.OnSeekBarChangeListener
-import _root_.android.webkit.WebView
+import _root_.android.webkit.{WebView, WebViewClient}
 import scala.io.Source
 
 class ArticleActivity extends Activity {
@@ -86,17 +86,11 @@ class ArticleActivity extends Activity {
     mWebView = findViewById(R.id.webview).asInstanceOf[WebView]
     mWebView.getSettings.setJavaScriptEnabled(true)
     mWebView.getSettings.setUseWideViewPort(true)
-
-    mWebView.loadData(ArticleProvider.htmlHeader + script + ArticleProvider.htmlFooter, "text/html", "utf-8")
-
-    mWebView.setOnLongClickListener(new OnLongClickListener{
-      override def onLongClick(v: View) = {
-        val hr = mWebView.getHitTestResult
-        val url = "http://eow.alc.co.jp/" + hr.getExtra.replace(".", "") + "/UTF-8/"
-        mWebView.loadUrl(url)
-        true
-      }
-    })
+    mWebView.setWebViewClient(new WebViewClient)
+    val js = """
+    location.href = 'http://eow.alc.co.jp/' + this.innerHTML + '/UTF-8/';
+    """
+    mWebView.loadData(ArticleProvider.htmlHeader.format(js) + script + ArticleProvider.htmlFooter, "text/html", "utf-8")
   }
 
   override def onKeyDown(keyCode: Int, event: KeyEvent ): Boolean = {
