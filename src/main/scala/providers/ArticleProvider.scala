@@ -82,19 +82,17 @@ object ArticleProvider{
     val dir =  new File(List(Environment.getExternalStorageDirectory, mMP3Dir).mkString("/"))
     if(dir.exists == false){ dir.mkdirs }
 
-    val path = new File(dir, id + ".mp3")
-    if(path.exists == false){
-      val file = new FileOutputStream(path)
-      val client = new DefaultHttpClient
+    val file = new File(dir, id + ".mp3")
+    if(file.exists == false){
+      val output = new FileOutputStream(file)
       try{
-        val response = client.execute(new HttpGet(mp3))
-        response.getEntity.writeTo(file)
-        file.close
+        val response = (new DefaultHttpClient).execute(new HttpGet(mp3))
+        response.getEntity.writeTo(output)
       }finally{
-        file.close
+        output.close
       }
     }
-    path
+    file
   }
 
   val htmlHeader = """
