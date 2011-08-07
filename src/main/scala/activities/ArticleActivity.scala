@@ -63,53 +63,57 @@ class ArticleActivity extends Activity {
     if(ArticleProvider.is_downloadable(this) == false){
       mPlayButton.setImageResource(R.drawable.cross)
       Toast.makeText(this, getString(R.string.netword_is_down_so_cannot_donwload_mp3), Toast.LENGTH_LONG).show
-    }else{
-      val handler = new Handler
-      val dialog = ProgressDialog.show(ArticleActivity.this, null,
-                                       mDownloadMessage, true, true)
-      (new Thread(new Runnable(){
-        def run {
-          val path = ArticleProvider.fetch_mp3(id, mp3) match{
-            case None    => null
-            case Some(f) => f
-          }
-          handler.post(new Runnable() {
-            def run {
-              try{
-                mPlayer = new MediaPlayer
-                if(path == null){
-                  throw new IOException
-                }
-                mPlayer.setDataSource(path.toString)
-                mPlayer.prepare
-              }catch{
-                case e: IOException => {
-                  mPlayButton.setImageResource(R.drawable.cross)
-                  mPlayer = null
-                  if(path != null && path.exists){
-                    path.delete
-                  }
-                  Toast.makeText(ArticleActivity.this, getString(R.string.mp3_is_wrong_please_retry), Toast.LENGTH_LONG).show
-                  dialog.dismiss
-                  return
-                }
-              }
-
-              mSeekBar = findViewById(R.id.seekbar).asInstanceOf[SeekBar]
-              mDuration = mPlayer.getDuration
-
-              mSeekBar.setMax(mDuration)
-              mSeekBar.setOnSeekBarChangeListener(seekListener)
-
-              mProgressRefresher = new Handler
-              mProgressRefresher.postDelayed(new ProgressRefresher, 200)
-              dialog.dismiss
-            }
-          });
-        }
-      })).start
+      render(script)
+      return
     }
+    val handler = new Handler
+    val dialog = ProgressDialog.show(ArticleActivity.this, null,
+                                       mDownloadMessage, true, true)
+    (new Thread(new Runnable(){
+      def run {
+        val path = ArticleProvider.fetch_mp3(id, mp3) match{
+          case None    => null
+          case Some(f) => f
+        }
+        handler.post(new Runnable() {
+          def run {
+            try{
+              mPlayer = new MediaPlayer
+              if(path == null){
+                throw new IOException
+              }
+              mPlayer.setDataSource(path.toString)
+              mPlayer.prepare
+            }catch{
+              case e: IOException => {
+                mPlayButton.setImageResource(R.drawable.cross)
+                mPlayer = null
+                if(path != null && path.exists){
+                  path.delete
+                }
+                Toast.makeText(ArticleActivity.this, getString(R.string.mp3_is_wrong_please_retry), Toast.LENGTH_LONG).show
+                dialog.dismiss
+                return
+              }
+            }
 
+            mSeekBar = findViewById(R.id.seekbar).asInstanceOf[SeekBar]
+            mDuration = mPlayer.getDuration
+
+            mSeekBar.setMax(mDuration)
+            mSeekBar.setOnSeekBarChangeListener(seekListener)
+
+            mProgressRefresher = new Handler
+            mProgressRefresher.postDelayed(new ProgressRefresher, 200)
+            dialog.dismiss
+          }
+        });
+      }
+    })).start
+    render(script)
+  }
+
+  def render(script:String) {
     mWebView = findViewById(R.id.webview).asInstanceOf[WebView]
     mWebView.getSettings.setJavaScriptEnabled(true)
     mWebView.getSettings.setUseWideViewPort(true)
@@ -120,7 +124,7 @@ class ArticleActivity extends Activity {
     mWebView.loadData(ArticleProvider.htmlHeader.format(js) + script + ArticleProvider.htmlFooter, "text/html", "utf-8")
   }
 
-  override def onKeyDown(keyCode: Int, event: KeyEvent ): Boolean = {
+  override def onKeyDown(keyCode: Int, event: KeyEvent): Boolean = {
     keyCode match{
       case KeyEvent.KEYCODE_BACK => {
         if(mWebView.canGoBack){
