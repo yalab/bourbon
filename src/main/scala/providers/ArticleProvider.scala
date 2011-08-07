@@ -11,6 +11,7 @@ import _root_.android.util.Log
 import java.net.URL
 import scala.xml.{XML, Elem}
 import java.io.{File, FileOutputStream}
+import java.net.UnknownHostException
 import org.apache.http.impl.client.DefaultHttpClient
 import org.apache.http.client.methods.HttpGet
 
@@ -79,7 +80,7 @@ object ArticleProvider{
     })
   }
 
-  def fetch_mp3(id: String, mp3: String) = {
+  def fetch_mp3(id: String, mp3: String): Option[File] = {
     val dir =  new File(List(Environment.getExternalStorageDirectory, mMP3Dir).mkString("/"))
     if(dir.exists == false){ dir.mkdirs }
 
@@ -89,11 +90,17 @@ object ArticleProvider{
       try{
         val response = (new DefaultHttpClient).execute(new HttpGet(mp3))
         response.getEntity.writeTo(output)
+      }catch{
+        case e =>{
+          output.close
+          file.delete
+          return None
+        }
       }finally{
         output.close
       }
     }
-    file
+    Some(file)
   }
 
   def is_downloadable(c: Context): Boolean = {

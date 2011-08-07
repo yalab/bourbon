@@ -69,18 +69,26 @@ class ArticleActivity extends Activity {
                                        mDownloadMessage, true, true)
       (new Thread(new Runnable(){
         def run {
-          val path = ArticleProvider.fetch_mp3(id, mp3)
+          val path = ArticleProvider.fetch_mp3(id, mp3) match{
+            case None    => null
+            case Some(f) => f
+          }
           handler.post(new Runnable() {
             def run {
               try{
                 mPlayer = new MediaPlayer
+                if(path == null){
+                  throw new IOException
+                }
                 mPlayer.setDataSource(path.toString)
                 mPlayer.prepare
               }catch{
                 case e: IOException => {
                   mPlayButton.setImageResource(R.drawable.cross)
                   mPlayer = null
-                  path.delete
+                  if(path != null && path.exists){
+                    path.delete
+                  }
                   Toast.makeText(ArticleActivity.this, getString(R.string.mp3_is_wrong_please_retry), Toast.LENGTH_LONG).show
                   dialog.dismiss
                   return
