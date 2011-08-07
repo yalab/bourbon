@@ -3,4 +3,5 @@
     <string name="download">Download</string>
     <string name="unknown_host_exeption_message">インターネットにつながっていません</string>
     <string name="io_exeption_message">ダウンロード中に接続が切れました</string>
+    <string name="netword_is_down_so_cannot_donwload_mp3">インターネットにつながっていないためMP3ファイルがダウンロードできません</string>
 </resources>

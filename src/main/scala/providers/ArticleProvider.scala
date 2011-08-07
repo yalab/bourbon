@@ -3,7 +3,8 @@ package org.yalab.bourbon
 import _root_.android.content.{ContentProvider, ContentValues, ContentUris, Context, UriMatcher}
 import _root_.android.database.Cursor
 import _root_.android.database.sqlite.{SQLiteDatabase, SQLiteOpenHelper}
-import _root_.android.net.Uri
+import _root_.android.net.{Uri, ConnectivityManager}
+import _root_.android.net.wifi.WifiManager
 import _root_.android.os.Environment
 import _root_.android.provider.BaseColumns
 import _root_.android.util.Log
@@ -93,6 +94,17 @@ object ArticleProvider{
       }
     }
     file
+  }
+
+  def is_downloadable(c: Context): Boolean = {
+    val wifiState = c.getSystemService(Context.WIFI_SERVICE).asInstanceOf[WifiManager].getWifiState
+    val activeNetwork = c.getSystemService(Context.CONNECTIVITY_SERVICE).asInstanceOf[ConnectivityManager].getActiveNetworkInfo
+
+    if(activeNetwork == null && wifiState != WifiManager.WIFI_STATE_ENABLED){
+      false
+    }else{
+      true
+    }
   }
 
   val htmlHeader = """

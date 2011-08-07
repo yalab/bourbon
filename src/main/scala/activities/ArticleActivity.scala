@@ -6,7 +6,7 @@ import _root_.android.os.{Bundle, Handler}
 import _root_.android.provider.BaseColumns
 import _root_.android.view.{View, KeyEvent}
 import _root_.android.view.View.OnLongClickListener
-import _root_.android.widget.{SeekBar, ImageButton}
+import _root_.android.widget.{SeekBar, ImageButton, Toast}
 import _root_.android.widget.SeekBar.OnSeekBarChangeListener
 import _root_.android.webkit.{WebView, WebViewClient}
 import scala.io.Source
@@ -57,31 +57,37 @@ class ArticleActivity extends Activity {
     val script = c.getString(c.getColumnIndex(ArticleProvider.F_SCRIPT))
     val mp3    = c.getString(c.getColumnIndex(ArticleProvider.F_MP3))
     val id     = c.getString(c.getColumnIndex(BaseColumns._ID))
-    val handler = new Handler
-    val dialog = ProgressDialog.show(ArticleActivity.this, null,
-                                     mDownloadMessage, true, true)
-    (new Thread(new Runnable(){
-      def run {
-        val path = ArticleProvider.fetch_mp3(id, mp3)
-        handler.post(new Runnable() {
-          def run {
-            mPlayer = new MediaPlayer
-            mPlayer.setDataSource(path.toString)
-            mPlayer.prepare
-            mPlayButton = findViewById(R.id.play_button).asInstanceOf[ImageButton]
-            mSeekBar = findViewById(R.id.seekbar).asInstanceOf[SeekBar]
-            mDuration = mPlayer.getDuration
+    mPlayButton = findViewById(R.id.play_button).asInstanceOf[ImageButton]
 
-            mSeekBar.setMax(mDuration)
-            mSeekBar.setOnSeekBarChangeListener(seekListener)
+    if(ArticleProvider.is_downloadable(this) == false){
+      mPlayButton.setImageResource(R.drawable.cross)
+      Toast.makeText(this, getString(R.string.netword_is_down_so_cannot_donwload_mp3), Toast.LENGTH_LONG).show
+    }else{
+      val handler = new Handler
+      val dialog = ProgressDialog.show(ArticleActivity.this, null,
+                                       mDownloadMessage, true, true)
+      (new Thread(new Runnable(){
+        def run {
+          val path = ArticleProvider.fetch_mp3(id, mp3)
+          handler.post(new Runnable() {
+            def run {
+              mPlayer = new MediaPlayer
+              mPlayer.setDataSource(path.toString)
+              mPlayer.prepare
+              mSeekBar = findViewById(R.id.seekbar).asInstanceOf[SeekBar]
+              mDuration = mPlayer.getDuration
 
-            mProgressRefresher = new Handler
-            mProgressRefresher.postDelayed(new ProgressRefresher, 200)
-            dialog.dismiss
-          }
-        });
-      }
-    })).start
+              mSeekBar.setMax(mDuration)
+              mSeekBar.setOnSeekBarChangeListener(seekListener)
+
+              mProgressRefresher = new Handler
+              mProgressRefresher.postDelayed(new ProgressRefresher, 200)
+              dialog.dismiss
+            }
+          });
+        }
+      })).start
+    }
 
     mWebView = findViewById(R.id.webview).asInstanceOf[WebView]
     mWebView.getSettings.setJavaScriptEnabled(true)
@@ -115,6 +121,9 @@ class ArticleActivity extends Activity {
   }
 
   def pressPlay(view: View) {
+    if(mPlayer == null){
+      return
+    }
     if(mPlayer.isPlaying){
       mPlayer.pause
       mPlayButton.setImageResource(R.drawable.play)
