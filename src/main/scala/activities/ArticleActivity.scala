@@ -10,6 +10,7 @@ import _root_.android.widget.{SeekBar, ImageButton, Toast}
 import _root_.android.widget.SeekBar.OnSeekBarChangeListener
 import _root_.android.webkit.{WebView, WebViewClient}
 import scala.io.Source
+import java.io.IOException
 
 class ArticleActivity extends Activity {
   var mPlayer: MediaPlayer = null
@@ -71,9 +72,21 @@ class ArticleActivity extends Activity {
           val path = ArticleProvider.fetch_mp3(id, mp3)
           handler.post(new Runnable() {
             def run {
-              mPlayer = new MediaPlayer
-              mPlayer.setDataSource(path.toString)
-              mPlayer.prepare
+              try{
+                mPlayer = new MediaPlayer
+                mPlayer.setDataSource(path.toString)
+                mPlayer.prepare
+              }catch{
+                case e: IOException => {
+                  mPlayButton.setImageResource(R.drawable.cross)
+                  mPlayer = null
+                  path.delete
+                  Toast.makeText(ArticleActivity.this, getString(R.string.mp3_is_wrong_please_retry), Toast.LENGTH_LONG).show
+                  dialog.dismiss
+                  return
+                }
+              }
+
               mSeekBar = findViewById(R.id.seekbar).asInstanceOf[SeekBar]
               mDuration = mPlayer.getDuration
 
