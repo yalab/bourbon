@@ -60,7 +60,8 @@ class ArticleActivity extends Activity {
     val id     = c.getString(c.getColumnIndex(BaseColumns._ID))
     mPlayButton = findViewById(R.id.play_button).asInstanceOf[ImageButton]
 
-    if(ArticleProvider.is_downloadable(this) == false){
+    if(ArticleProvider.mp3_file(id, mp3).exists == false &&
+       ArticleProvider.is_downloadable(this) == false){
       mPlayButton.setImageResource(R.drawable.cross)
       Toast.makeText(this, getString(R.string.netword_is_down_so_cannot_donwload_mp3), Toast.LENGTH_LONG).show
       render(script)
