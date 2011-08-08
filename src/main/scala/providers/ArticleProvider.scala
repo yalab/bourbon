@@ -37,7 +37,6 @@ object ArticleProvider{
   final val mMP3Dir           = "/Android/data/%s/files/".format(AUTHORITY)
   final val mRssURL           = "http://www.voanews.com/templates/Articles.rss?sectionPath=/learningenglish/home"
 
-
   val FIELDS = Map(BaseColumns._ID -> "INTEGER PRIMARY KEY",
                    F_TITLE         -> "TEXT",
                    "link"          -> "TEXT",
@@ -64,7 +63,12 @@ object ArticleProvider{
         val v = k match {
           case F_MP3       => {
             val flashvars = (encoded \\ "param" filter(node => (node \ "@name").toString == "flashvars")) \ "@value"
-            flashvars.toString.split("&").map(str => str.split("=")).filter(a => a(0) == "file")(0)(1)
+            val queryString = flashvars.toString.split("&").map(str => str.split("=")).filter(a => a(0) == "file")
+            if(queryString.size > 0){
+              queryString(0)(1).replaceAll("[ 　]", "")
+            }else{
+              null
+            }
           }
           case F_SCRIPT    => {
             (encoded \\ "p").map(node => {

@@ -57,7 +57,7 @@ class MainActivity extends ListActivity {
                                            mDownloadMessage, true, true)
           def run{
             try{
-              ArticleProvider.download.foreach(article => {
+              ArticleProvider.download.filter(article => article(ArticleProvider.F_MP3) != null).foreach(article => {
                 val values = new ContentValues
                 article.foreach{case(k, v) => values.put(k, v.toString)}
                 val c = mResolver.query(ArticleProvider.CONTENT_URI, Array(),
