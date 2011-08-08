@@ -140,6 +140,9 @@ a{
   text-decoration: none;
   color: #0F0F0F;
 }
+#content{
+  padding-bottom: 30px;
+}
   </style>
   <script type="text/javascript">
   function search(word){
