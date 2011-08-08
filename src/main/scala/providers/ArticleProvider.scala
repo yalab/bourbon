@@ -5,6 +5,7 @@ import _root_.android.database.Cursor
 import _root_.android.database.sqlite.{SQLiteDatabase, SQLiteOpenHelper}
 import _root_.android.net.{Uri, ConnectivityManager}
 import _root_.android.net.wifi.WifiManager
+import _root_.android.util.Log
 import _root_.android.os.Environment
 import _root_.android.provider.BaseColumns
 import _root_.android.util.Log
@@ -32,6 +33,7 @@ object ArticleProvider{
   final val F_SCRIPT    = "script"
   final val F_MP3       = "mp3"
   final val F_ENCLOSURE = "enclosure"
+  final val TAG = "ArticleProvider"
 
   final val EQUAL_PLACEHOLDER = "= ?"
   final val MP3_DIR           = "/Android/data/%s/files/".format(AUTHORITY)
@@ -101,6 +103,7 @@ object ArticleProvider{
         case e =>{
           output.close
           file.delete
+          ArticleProvider.write_error_log(TAG, e)
           return None
         }
       }finally{
@@ -119,6 +122,10 @@ object ArticleProvider{
     }else{
       true
     }
+  }
+
+  def write_error_log(tag: String, e:Throwable){
+    Log.w(tag, e.getStackTrace.map(t => "at %s.%s(%s:%s)".format(t.getClassName, t.getMethodName, t.getFileName, t.getLineNumber)).mkString("\n"))
   }
 
   val htmlHeader = """

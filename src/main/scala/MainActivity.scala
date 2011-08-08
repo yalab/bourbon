@@ -18,6 +18,7 @@ class MainActivity extends ListActivity {
   import MainActivity._
 
   val DOWNLOAD_MESSAGE = "Downloading. Please wait..."
+  val TAG = "MainActivity"
   var mResolver: ContentResolver = null
   var mHandler: Handler = null
 
@@ -75,12 +76,14 @@ class MainActivity extends ListActivity {
                 mHandler.post(new Runnable() { def run {
                   Toast.makeText(MainActivity.this, getString(R.string.unknown_host_exeption_message), Toast.LENGTH_SHORT).show
                 } })
+                ArticleProvider.write_error_log(TAG, e)
               }
               case e: IOException => {
                 dialog.dismiss
                 mHandler.post(new Runnable() { def run {
                   Toast.makeText(MainActivity.this, getString(R.string.io_exeption_message), Toast.LENGTH_SHORT).show
                 } })
+                ArticleProvider.write_error_log(TAG, e)
               }
               case e => {
                 throw e

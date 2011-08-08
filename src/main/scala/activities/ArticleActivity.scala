@@ -21,6 +21,7 @@ class ArticleActivity extends Activity {
   var mProgressRefresher: Handler = null
   var mWebView: WebView = null
   val DOWNLOAD_MESSAGE = "Downloading MP3 file.\nPlease wait a few minutes..."
+  val TAG = "ArticleActivity"
 
   val seekListener = new OnSeekBarChangeListener{
     def onStartTrackingTouch(bar: SeekBar){
@@ -94,6 +95,7 @@ class ArticleActivity extends Activity {
                 }
                 Toast.makeText(ArticleActivity.this, getString(R.string.mp3_is_wrong_please_retry), Toast.LENGTH_LONG).show
                 dialog.dismiss
+                ArticleProvider.write_error_log(TAG, e)
                 return
               }
             }
