@@ -1,6 +1,7 @@
 package org.yalab.bourbon
 
 import _root_.android.app.{Activity, ProgressDialog}
+import _root_.android.content.{ContentResolver, ContentValues, ContentUris}
 import _root_.android.media.{MediaPlayer, AudioManager}
 import _root_.android.os.{Bundle, Handler}
 import _root_.android.provider.BaseColumns
@@ -20,8 +21,11 @@ class ArticleActivity extends Activity {
   var mSeekBar: SeekBar = null
   var mProgressRefresher: Handler = null
   var mWebView: WebView = null
+  var mResolver: ContentResolver = null
   val DOWNLOAD_MESSAGE = "Downloading MP3 file.\nPlease wait a few minutes..."
   val TAG = "ArticleActivity"
+  val ONE_HOUR   = 1000 * 60 * 60
+  val ONE_MINUTE = 1000 * 60
 
   val seekListener = new OnSeekBarChangeListener{
     def onStartTrackingTouch(bar: SeekBar){
@@ -53,15 +57,17 @@ class ArticleActivity extends Activity {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.article)
     setVolumeControlStream(AudioManager.STREAM_MUSIC)
-    val fields = Array(ArticleProvider.F_SCRIPT, ArticleProvider.F_MP3)
-    val c = getContentResolver.query(getIntent.getData, fields, null, null, null)
+    val fields = Array(ArticleProvider.F_SCRIPT, ArticleProvider.F_MP3, ArticleProvider.F_TIME)
+    mResolver = getContentResolver
+    val c = mResolver.query(getIntent.getData, fields, null, null, null)
     c.moveToFirst
-    val script = c.getString(c.getColumnIndex(ArticleProvider.F_SCRIPT))
-    val mp3    = c.getString(c.getColumnIndex(ArticleProvider.F_MP3))
-    val id     = c.getString(c.getColumnIndex(BaseColumns._ID))
-    mPlayButton = findViewById(R.id.play_button).asInstanceOf[ImageButton]
+    val script   = c.getString(c.getColumnIndex(ArticleProvider.F_SCRIPT))
+    val mp3      = c.getString(c.getColumnIndex(ArticleProvider.F_MP3))
+    val time     = c.getString(c.getColumnIndex(ArticleProvider.F_TIME))
+    val id       = c.getLong(c.getColumnIndex(BaseColumns._ID))
+    mPlayButton  = findViewById(R.id.play_button).asInstanceOf[ImageButton]
 
-    if(ArticleProvider.mp3File(id, mp3).exists == false &&
+    if(ArticleProvider.mp3File(id.toString, mp3).exists == false &&
        ArticleProvider.isDownloadable(this) == false){
       mPlayButton.setImageResource(R.drawable.cross)
       Toast.makeText(this, getString(R.string.netword_is_down_so_cannot_donwload_mp3), Toast.LENGTH_LONG).show
@@ -73,7 +79,7 @@ class ArticleActivity extends Activity {
                                        DOWNLOAD_MESSAGE, true, true)
     (new Thread(new Runnable(){
       def run {
-        val path = ArticleProvider.fetchMp3(id, mp3) match{
+        val path = ArticleProvider.fetchMp3(id.toString, mp3) match{
           case None    => null
           case Some(f) => f
         }
@@ -102,6 +108,15 @@ class ArticleActivity extends Activity {
 
             mSeekBar = findViewById(R.id.seekbar).asInstanceOf[SeekBar]
             mDuration = mPlayer.getDuration
+            if(time == null){
+              val uri = ContentUris.withAppendedId(ArticleProvider.CONTENT_URI, id)
+              val minutes = ( mDuration % (ONE_HOUR) ) / (ONE_MINUTE);
+              val seconds = ( ( mDuration % (ONE_HOUR) ) % (ONE_MINUTE) ) / 1000;
+
+              val values = new ContentValues
+              values.put(ArticleProvider.F_TIME, "%02d:%02d".format(minutes, seconds))
+              mResolver.update(uri, values, null, null)
+            }
 
             mSeekBar.setMax(mDuration)
             mSeekBar.setOnSeekBarChangeListener(seekListener)

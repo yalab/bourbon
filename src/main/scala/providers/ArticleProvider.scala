@@ -33,6 +33,7 @@ object ArticleProvider{
   final val F_SCRIPT    = "script"
   final val F_MP3       = "mp3"
   final val F_ENCLOSURE = "enclosure"
+  final val F_TIME      = "time"
   final val TAG = "ArticleProvider"
 
   final val EQUAL_PLACEHOLDER = "= ?"
@@ -49,7 +50,8 @@ object ArticleProvider{
                    F_ENCLOSURE     -> "TEXT",
                    F_MP3           -> "TEXT",
                    F_SCRIPT        -> "TEXT",
-                   F_PARAGRAPH     -> "INTEGER")
+                   F_PARAGRAPH     -> "INTEGER",
+                   F_TIME          -> "TEXT")
 
   def download() = {
     val client = new DefaultHttpClient
@@ -79,6 +81,7 @@ object ArticleProvider{
           }
           case F_ENCLOSURE => item \ k \ "@url"
           case F_PARAGRAPH => (encoded \\ "p").length
+          case F_TIME      => ""
           case _           => (item \ k).head.text
         }
         (k, v)
@@ -183,6 +186,13 @@ class ArticleProvider extends ContentProvider {
   }
 
   def update(uri: Uri, values: ContentValues, where: String, whereArgs: Array[String]): Int = {
+    val db = connection.getWritableDatabase
+    matcher `match` uri match {
+      case SHOW => {
+        val id = uri.getPathSegments().get(1)
+        db.update(TABLE_NAME, values, BaseColumns._ID + EQUAL_PLACEHOLDER, Array(id))
+      }
+    }
     1
   }
 
