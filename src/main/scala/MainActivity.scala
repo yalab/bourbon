@@ -34,7 +34,7 @@ class MainActivity extends ListActivity {
   }
 
   def render{
-    val fields = Array(ArticleProvider.F_TITLE, ArticleProvider.F_PARAGRAPH)
+    val fields = Array(ArticleProvider.F_TITLE, ArticleProvider.F_PARAGRAPH, ArticleProvider.F_TIME)
     val c = mResolver.query(ArticleProvider.CONTENT_URI, fields, null, null, null)
     val adapter = new ArticleAdapter(MainActivity.this, R.layout.row, c,
                                      fields, Array(R.id.title, R.id.paragraph))
@@ -104,7 +104,7 @@ class MainActivity extends ListActivity {
   }
 
   class ArticleViewBinder extends SimpleCursorAdapter.ViewBinder{
-    val mSeparator = " "
+    val SEPARATOR = " "
     var mParagraphColumnIndex = -1
     def setViewValue(v: View, c: Cursor, columnIndex: Int): Boolean = {
       if(mParagraphColumnIndex == -1){
@@ -113,8 +113,14 @@ class MainActivity extends ListActivity {
 
       if(mParagraphColumnIndex != columnIndex){ return false }
 
-      val n = c.getInt(columnIndex)
-      v.asInstanceOf[TextView].setText(n.toString + mSeparator + ArticleProvider.F_PARAGRAPH)
+      val time = c.getString(c.getColumnIndex(ArticleProvider.F_TIME))
+      val text = if(time == null){
+        c.getInt(columnIndex).toString + SEPARATOR + ArticleProvider.F_PARAGRAPH
+      }else{
+        time
+      }
+
+      v.asInstanceOf[TextView].setText(text)
       true
     }
   }
