@@ -20,7 +20,7 @@ class ArticleActivity extends Activity {
   var mSeekBar: SeekBar = null
   var mProgressRefresher: Handler = null
   var mWebView: WebView = null
-  val mDownloadMessage = "Downloading MP3 file.\nPlease wait a few minutes..."
+  val DOWNLOAD_MESSAGE = "Downloading MP3 file.\nPlease wait a few minutes..."
 
   val seekListener = new OnSeekBarChangeListener{
     def onStartTrackingTouch(bar: SeekBar){
@@ -69,7 +69,7 @@ class ArticleActivity extends Activity {
     }
     val handler = new Handler
     val dialog = ProgressDialog.show(ArticleActivity.this, null,
-                                       mDownloadMessage, true, true)
+                                       DOWNLOAD_MESSAGE, true, true)
     (new Thread(new Runnable(){
       def run {
         val path = ArticleProvider.fetch_mp3(id, mp3) match{

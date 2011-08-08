@@ -33,9 +33,9 @@ object ArticleProvider{
   final val F_MP3       = "mp3"
   final val F_ENCLOSURE = "enclosure"
 
-  final val mEqualPlaceHolder = "= ?"
-  final val mMP3Dir           = "/Android/data/%s/files/".format(AUTHORITY)
-  final val mRssURL           = "http://www.voanews.com/templates/Articles.rss?sectionPath=/learningenglish/home"
+  final val EQUAL_PLACEHOLDER = "= ?"
+  final val MP3_DIR           = "/Android/data/%s/files/".format(AUTHORITY)
+  final val RSS_URL           = "http://www.voanews.com/templates/Articles.rss?sectionPath=/learningenglish/home"
 
   val FIELDS = Map(BaseColumns._ID -> "INTEGER PRIMARY KEY",
                    F_TITLE         -> "TEXT",
@@ -53,7 +53,7 @@ object ArticleProvider{
     val client = new DefaultHttpClient
     var xml: Elem = null
     try{
-      val response = client.execute(new HttpGet(mRssURL))
+      val response = client.execute(new HttpGet(RSS_URL))
       val entity = response.getEntity
       xml = XML.load(entity.getContent)
     }
@@ -85,7 +85,7 @@ object ArticleProvider{
   }
 
   def mp3_file(id: String, mp3:String) = {
-    val dir =  new File(List(Environment.getExternalStorageDirectory, mMP3Dir).mkString("/"))
+    val dir =  new File(List(Environment.getExternalStorageDirectory, MP3_DIR).mkString("/"))
     if(dir.exists == false){ dir.mkdirs }
     new File(dir, id + ".mp3")
   }
@@ -196,7 +196,7 @@ class ArticleProvider extends ContentProvider {
       }
       case SHOW  => {
         val id = uri.getPathSegments().get(1)
-        db.query(TABLE_NAME, Array(BaseColumns._ID) ++ fields, BaseColumns._ID + mEqualPlaceHolder, Array(id), null, null, null)
+        db.query(TABLE_NAME, Array(BaseColumns._ID) ++ fields, BaseColumns._ID + EQUAL_PLACEHOLDER, Array(id), null, null, null)
       }
       case _     => throw new IllegalArgumentException("Unknown URI " + uri)
     }

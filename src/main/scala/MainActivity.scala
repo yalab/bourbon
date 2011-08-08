@@ -16,9 +16,10 @@ object MainActivity {
 
 class MainActivity extends ListActivity {
   import MainActivity._
-  val handler = new Handler
-  val mDownloadMessage = "Downloading. Please wait..."
+
+  val DOWNLOAD_MESSAGE = "Downloading. Please wait..."
   var mResolver: ContentResolver = null
+  var mHandler: Handler = null
 
   override def onCreate(savedInstanceState: Bundle) {
     super.onCreate(savedInstanceState)
@@ -27,6 +28,7 @@ class MainActivity extends ListActivity {
       intent.setData(ArticleProvider.CONTENT_URI)
     }
     mResolver = getContentResolver
+    mHandler  = new Handler
     render
   }
 
@@ -54,14 +56,14 @@ class MainActivity extends ListActivity {
 
         (new Thread(new Runnable{
           val dialog = ProgressDialog.show(MainActivity.this, null,
-                                           mDownloadMessage, true, true)
+                                           DOWNLOAD_MESSAGE, true, true)
           def run{
             try{
               ArticleProvider.download.filter(article => article(ArticleProvider.F_MP3) != null).foreach(article => {
                 val values = new ContentValues
                 article.foreach{case(k, v) => values.put(k, v.toString)}
                 val c = mResolver.query(ArticleProvider.CONTENT_URI, Array(),
-                                        ArticleProvider.F_GUID + ArticleProvider.mEqualPlaceHolder,
+                                        ArticleProvider.F_GUID + ArticleProvider.EQUAL_PLACEHOLDER,
                                         Array(article(ArticleProvider.F_GUID).toString), null)
                 if(c.getCount < 1){
                   mResolver.insert(ArticleProvider.CONTENT_URI, values)
@@ -70,13 +72,13 @@ class MainActivity extends ListActivity {
             }catch{
               case e: UnknownHostException => {
                 dialog.dismiss
-                handler.post(new Runnable() { def run {
+                mHandler.post(new Runnable() { def run {
                   Toast.makeText(MainActivity.this, getString(R.string.unknown_host_exeption_message), Toast.LENGTH_SHORT).show
                 } })
               }
               case e: IOException => {
                 dialog.dismiss
-                handler.post(new Runnable() { def run {
+                mHandler.post(new Runnable() { def run {
                   Toast.makeText(MainActivity.this, getString(R.string.io_exeption_message), Toast.LENGTH_SHORT).show
                 } })
               }
@@ -85,7 +87,7 @@ class MainActivity extends ListActivity {
               }
             }
             dialog.dismiss
-            handler.post(new Runnable() { def run { render } });
+            mHandler.post(new Runnable() { def run { render } });
           }
         })).start
         true
