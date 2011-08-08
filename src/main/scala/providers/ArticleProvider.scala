@@ -86,14 +86,14 @@ object ArticleProvider{
     })
   }
 
-  def mp3_file(id: String, mp3:String) = {
+  def mp3File(id: String, mp3:String) = {
     val dir =  new File(List(Environment.getExternalStorageDirectory, MP3_DIR).mkString("/"))
     if(dir.exists == false){ dir.mkdirs }
     new File(dir, id + ".mp3")
   }
 
-  def fetch_mp3(id: String, mp3: String): Option[File] = {
-    val file = ArticleProvider.mp3_file(id, mp3)
+  def fetchMp3(id: String, mp3: String): Option[File] = {
+    val file = ArticleProvider.mp3File(id, mp3)
     if(file.exists == false){
       val output = new FileOutputStream(file)
       try{
@@ -103,7 +103,7 @@ object ArticleProvider{
         case e =>{
           output.close
           file.delete
-          ArticleProvider.write_error_log(TAG, e)
+          ArticleProvider.writeErrorLog(TAG, e)
           return None
         }
       }finally{
@@ -113,7 +113,7 @@ object ArticleProvider{
     Some(file)
   }
 
-  def is_downloadable(c: Context): Boolean = {
+  def isDownloadable(c: Context): Boolean = {
     val wifiState = c.getSystemService(Context.WIFI_SERVICE).asInstanceOf[WifiManager].getWifiState
     val activeNetwork = c.getSystemService(Context.CONNECTIVITY_SERVICE).asInstanceOf[ConnectivityManager].getActiveNetworkInfo
 
@@ -124,7 +124,7 @@ object ArticleProvider{
     }
   }
 
-  def write_error_log(tag: String, e:Throwable){
+  def writeErrorLog(tag: String, e:Throwable){
     Log.w(tag, e.getStackTrace.map(t => "at %s.%s(%s:%s)".format(t.getClassName, t.getMethodName, t.getFileName, t.getLineNumber)).mkString("\n"))
   }
 

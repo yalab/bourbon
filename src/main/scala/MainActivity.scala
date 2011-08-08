@@ -50,7 +50,7 @@ class MainActivity extends ListActivity {
   override def onOptionsItemSelected(item: MenuItem): Boolean = {
     item.getItemId match {
       case OPTION_DOWNLOAD => {
-        if(ArticleProvider.is_downloadable(this) == false){
+        if(ArticleProvider.isDownloadable(this) == false){
           Toast.makeText(MainActivity.this, getString(R.string.unknown_host_exeption_message), Toast.LENGTH_SHORT).show
           return true
         }
@@ -76,14 +76,14 @@ class MainActivity extends ListActivity {
                 mHandler.post(new Runnable() { def run {
                   Toast.makeText(MainActivity.this, getString(R.string.unknown_host_exeption_message), Toast.LENGTH_SHORT).show
                 } })
-                ArticleProvider.write_error_log(TAG, e)
+                ArticleProvider.writeErrorLog(TAG, e)
               }
               case e: IOException => {
                 dialog.dismiss
                 mHandler.post(new Runnable() { def run {
                   Toast.makeText(MainActivity.this, getString(R.string.io_exeption_message), Toast.LENGTH_SHORT).show
                 } })
-                ArticleProvider.write_error_log(TAG, e)
+                ArticleProvider.writeErrorLog(TAG, e)
               }
               case e => {
                 throw e

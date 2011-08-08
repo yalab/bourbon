@@ -61,8 +61,8 @@ class ArticleActivity extends Activity {
     val id     = c.getString(c.getColumnIndex(BaseColumns._ID))
     mPlayButton = findViewById(R.id.play_button).asInstanceOf[ImageButton]
 
-    if(ArticleProvider.mp3_file(id, mp3).exists == false &&
-       ArticleProvider.is_downloadable(this) == false){
+    if(ArticleProvider.mp3File(id, mp3).exists == false &&
+       ArticleProvider.isDownloadable(this) == false){
       mPlayButton.setImageResource(R.drawable.cross)
       Toast.makeText(this, getString(R.string.netword_is_down_so_cannot_donwload_mp3), Toast.LENGTH_LONG).show
       render(script)
@@ -73,7 +73,7 @@ class ArticleActivity extends Activity {
                                        DOWNLOAD_MESSAGE, true, true)
     (new Thread(new Runnable(){
       def run {
-        val path = ArticleProvider.fetch_mp3(id, mp3) match{
+        val path = ArticleProvider.fetchMp3(id, mp3) match{
           case None    => null
           case Some(f) => f
         }
@@ -95,7 +95,7 @@ class ArticleActivity extends Activity {
                 }
                 Toast.makeText(ArticleActivity.this, getString(R.string.mp3_is_wrong_please_retry), Toast.LENGTH_LONG).show
                 dialog.dismiss
-                ArticleProvider.write_error_log(TAG, e)
+                ArticleProvider.writeErrorLog(TAG, e)
                 return
               }
             }
