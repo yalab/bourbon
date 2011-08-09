@@ -4,7 +4,7 @@ import _root_.android.app.{Activity, ListActivity, ProgressDialog}
 import _root_.android.content.{ContentValues, Intent, ContentUris, Context, ContentResolver}
 import _root_.android.database.Cursor
 import _root_.android.os.{Bundle, Handler}
-import _root_.android.widget.{TextView, ListView, SimpleCursorAdapter, Toast}
+import _root_.android.widget.{TextView, ListView, SimpleCursorAdapter, Toast, ImageView}
 import _root_.android.view.{Menu, MenuItem, View}
 import java.io.IOException
 import java.lang.Runnable
@@ -12,6 +12,9 @@ import java.net.UnknownHostException
 
 object MainActivity {
   final val OPTION_DOWNLOAD = Menu.FIRST
+  val COLUMNS = Array(R.id.title, R.id.paragraph, R.id.icon)
+  val PARAGRAPH_COLUMN_INDEX = 2
+  val ICON_COLUMN_INDEX = 3
 }
 
 class MainActivity extends ListActivity {
@@ -37,7 +40,7 @@ class MainActivity extends ListActivity {
     val fields = Array(ArticleProvider.F_TITLE, ArticleProvider.F_PARAGRAPH, ArticleProvider.F_TIME)
     val c = mResolver.query(ArticleProvider.CONTENT_URI, fields, null, null, null)
     val adapter = new ArticleAdapter(MainActivity.this, R.layout.row, c,
-                                     fields, Array(R.id.title, R.id.paragraph))
+                                     fields, COLUMNS)
     setListAdapter(adapter)
   }
 
@@ -105,23 +108,30 @@ class MainActivity extends ListActivity {
 
   class ArticleViewBinder extends SimpleCursorAdapter.ViewBinder{
     val SEPARATOR = " "
-    var mParagraphColumnIndex = -1
     def setViewValue(v: View, c: Cursor, columnIndex: Int): Boolean = {
-      if(mParagraphColumnIndex == -1){
-        mParagraphColumnIndex = c.getColumnIndex(ArticleProvider.F_PARAGRAPH)
+      columnIndex match{
+        case MainActivity.PARAGRAPH_COLUMN_INDEX => {
+          val time = c.getString(c.getColumnIndex(ArticleProvider.F_TIME))
+          val text = if(time == null){
+            c.getInt(columnIndex).toString + SEPARATOR + ArticleProvider.F_PARAGRAPH
+          }else{
+            time
+          }
+          v.asInstanceOf[TextView].setText(text)
+          true
+        }
+        case MainActivity.ICON_COLUMN_INDEX => {
+          val time = c.getString(c.getColumnIndex(ArticleProvider.F_TIME))
+          val icon = if(time != null){
+            R.drawable.music
+          }else{
+            R.drawable.download
+          }
+          v.asInstanceOf[ImageView].setImageResource(icon)
+          true
+        }
+        case _ => false
       }
-
-      if(mParagraphColumnIndex != columnIndex){ return false }
-
-      val time = c.getString(c.getColumnIndex(ArticleProvider.F_TIME))
-      val text = if(time == null){
-        c.getInt(columnIndex).toString + SEPARATOR + ArticleProvider.F_PARAGRAPH
-      }else{
-        time
-      }
-
-      v.asInstanceOf[TextView].setText(text)
-      true
     }
   }
 
