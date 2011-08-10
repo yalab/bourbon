@@ -89,14 +89,14 @@ object ArticleProvider{
     })
   }
 
-  def mp3File(id: String, mp3:String) = {
+  def mp3File(id: String) = {
     val dir =  new File(List(Environment.getExternalStorageDirectory, MP3_DIR).mkString("/"))
     if(dir.exists == false){ dir.mkdirs }
     new File(dir, id + ".mp3")
   }
 
   def fetchMp3(id: String, mp3: String): Option[File] = {
-    val file = ArticleProvider.mp3File(id, mp3)
+    val file = ArticleProvider.mp3File(id)
     if(file.exists == false){
       val output = new FileOutputStream(file)
       try{
