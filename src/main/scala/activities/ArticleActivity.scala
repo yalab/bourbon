@@ -156,10 +156,10 @@ class ArticleActivity extends Activity {
     }
   }
 
-  override def onStop{
-    super.onStop
+  override def onPause{
+    super.onPause
     if(mPlayer != null){
-      mPlayer.stop
+      mPlayer.pause
     }
   }
 
