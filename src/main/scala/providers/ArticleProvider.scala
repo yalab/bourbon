@@ -191,6 +191,7 @@ class ArticleProvider extends ContentProvider {
       case SHOW => {
         val id = uri.getPathSegments().get(1)
         db.update(TABLE_NAME, values, BaseColumns._ID + EQUAL_PLACEHOLDER, Array(id))
+        getContext.getContentResolver.notifyChange(uri, null)
       }
     }
     1

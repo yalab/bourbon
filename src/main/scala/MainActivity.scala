@@ -39,6 +39,7 @@ class MainActivity extends ListActivity {
   def render{
     val fields = Array(ArticleProvider.F_TITLE, ArticleProvider.F_PARAGRAPH, ArticleProvider.F_TIME)
     val c = mResolver.query(ArticleProvider.CONTENT_URI, fields, null, null, null)
+    startManagingCursor(c)
     val adapter = new ArticleAdapter(MainActivity.this, R.layout.row, c,
                                      fields, COLUMNS)
     setListAdapter(adapter)
