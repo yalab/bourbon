@@ -22,7 +22,6 @@ class ArticleActivity extends Activity {
   var mProgressRefresher: Handler = null
   var mWebView: WebView = null
   var mResolver: ContentResolver = null
-  val DOWNLOAD_MESSAGE = "Downloading MP3 file.\nPlease wait a few minutes..."
   val TAG = "ArticleActivity"
   val ONE_HOUR   = 1000 * 60 * 60
   val ONE_MINUTE = 1000 * 60
@@ -76,7 +75,7 @@ class ArticleActivity extends Activity {
     }
     val handler = new Handler
     val dialog = ProgressDialog.show(ArticleActivity.this, null,
-                                       DOWNLOAD_MESSAGE, true, true)
+                                     getString(R.string.download_mp3), true, true)
     (new Thread(new Runnable(){
       def run {
         val path = ArticleProvider.fetchMp3(id.toString, mp3) match{
@@ -171,8 +170,8 @@ class ArticleActivity extends Activity {
       mPlayer.pause
       mPlayButton.setImageResource(R.drawable.play)
     }else{
-      mPlayButton.setImageResource(R.drawable.pause)
       mPlayer.start
+      mPlayButton.setImageResource(R.drawable.pause)
     }
   }
 }
