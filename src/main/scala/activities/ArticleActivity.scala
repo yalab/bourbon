@@ -29,12 +29,12 @@ class ArticleActivity extends Activity {
   val seekListener = new OnSeekBarChangeListener{
     def onStartTrackingTouch(bar: SeekBar){
       mSeeking = true
-      mPlayer.pause
+      stopSpeech
     }
 
     def onStopTrackingTouch(bar: SeekBar){
       mSeeking = false
-      mPlayer.start
+      playSpeech
     }
 
     def onProgressChanged(bar: SeekBar, progress: Int, fromuser: Boolean){
@@ -48,8 +48,8 @@ class ArticleActivity extends Activity {
       if(mPlayer != null && !mSeeking && mDuration != 0){
         mSeekBar.setProgress(mPlayer.getCurrentPosition)
       }
-      mProgressRefresher.removeCallbacksAndMessages(null);
-      mProgressRefresher.postDelayed(new ProgressRefresher, 200);
+      mProgressRefresher.removeCallbacksAndMessages(null)
+      mProgressRefresher.postDelayed(new ProgressRefresher, 200)
     }
   }
 
@@ -122,7 +122,6 @@ class ArticleActivity extends Activity {
             mSeekBar.setOnSeekBarChangeListener(seekListener)
 
             mProgressRefresher = new Handler
-            mProgressRefresher.postDelayed(new ProgressRefresher, 200)
             dialog.dismiss
           }
         });
@@ -159,7 +158,7 @@ class ArticleActivity extends Activity {
   override def onStop{
     super.onStop
     if(mPlayer != null){
-      mPlayer.pause
+      stopSpeech
     }
   }
 
@@ -168,11 +167,21 @@ class ArticleActivity extends Activity {
       return
     }
     if(mPlayer.isPlaying){
-      mPlayer.pause
+      stopSpeech
       mPlayButton.setImageResource(R.drawable.play)
     }else{
-      mPlayer.start
+      playSpeech
       mPlayButton.setImageResource(R.drawable.pause)
     }
+  }
+
+  def playSpeech{
+    mPlayer.start
+    mProgressRefresher.postDelayed(new ProgressRefresher, 200)
+  }
+
+  def stopSpeech{
+    mPlayer.pause
+    mProgressRefresher.removeCallbacksAndMessages(null)
   }
 }
