@@ -46,7 +46,6 @@ class ArticleActivity extends Activity {
   class ProgressRefresher extends Runnable{
     def run{
       if(mPlayer != null && !mSeeking && mDuration != 0){
-        val progress = mPlayer.getCurrentPosition / mDuration
         mSeekBar.setProgress(mPlayer.getCurrentPosition)
       }
       mProgressRefresher.removeCallbacksAndMessages(null);
