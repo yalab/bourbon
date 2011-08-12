@@ -35,11 +35,20 @@ class ArticleActivity extends Activity {
     def onStopTrackingTouch(bar: SeekBar){
       mSeeking = false
       playSpeech
+      mPlayButton.setImageResource(R.drawable.pause)
     }
 
     def onProgressChanged(bar: SeekBar, progress: Int, fromuser: Boolean){
       if(!fromuser){ return }
       mPlayer.seekTo(progress)
+    }
+  }
+
+  val completionListener = new MediaPlayer.OnCompletionListener{
+    def onCompletion(player :MediaPlayer){
+      stopSpeech
+      mSeekBar.setProgress(0)
+      mPlayButton.setImageResource(R.drawable.play)
     }
   }
 
@@ -87,6 +96,7 @@ class ArticleActivity extends Activity {
           def run {
             try{
               mPlayer = new MediaPlayer
+              mPlayer.setOnCompletionListener(completionListener)
               if(path == null){
                 throw new IOException
               }
@@ -176,12 +186,16 @@ class ArticleActivity extends Activity {
   }
 
   def playSpeech{
-    mPlayer.start
+    if(!mPlayer.isPlaying){
+      mPlayer.start
+    }
     mProgressRefresher.postDelayed(new ProgressRefresher, 200)
   }
 
   def stopSpeech{
-    mPlayer.pause
+    if(mPlayer.isPlaying){
+      mPlayer.pause
+    }
     mProgressRefresher.removeCallbacksAndMessages(null)
   }
 }
