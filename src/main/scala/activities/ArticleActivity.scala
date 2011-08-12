@@ -29,10 +29,12 @@ class ArticleActivity extends Activity {
   val seekListener = new OnSeekBarChangeListener{
     def onStartTrackingTouch(bar: SeekBar){
       mSeeking = true
+      mPlayer.pause
     }
 
     def onStopTrackingTouch(bar: SeekBar){
       mSeeking = false
+      mPlayer.start
     }
 
     def onProgressChanged(bar: SeekBar, progress: Int, fromuser: Boolean){
