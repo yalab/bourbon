@@ -4,6 +4,7 @@ import _root_.android.app.{Activity, ListActivity, ProgressDialog}
 import _root_.android.content.{ContentValues, Intent, ContentUris, Context, ContentResolver}
 import _root_.android.database.Cursor
 import _root_.android.os.{Bundle, Handler}
+import _root_.android.preference.PreferenceManager
 import _root_.android.widget.{TextView, ListView, SimpleCursorAdapter, Toast, ImageView}
 import _root_.android.view.{Menu, MenuItem, View}
 import java.io.IOException
@@ -12,6 +13,7 @@ import java.net.UnknownHostException
 
 object MainActivity {
   final val OPTION_DOWNLOAD = Menu.FIRST
+  final val OPTION_SETTING  = Menu.FIRST + 1
   val COLUMNS = Array(R.id.title, R.id.paragraph, R.id.icon)
   val PARAGRAPH_COLUMN_INDEX = 2
   val ICON_COLUMN_INDEX = 3
@@ -27,6 +29,8 @@ class MainActivity extends ListActivity {
 
   override def onCreate(savedInstanceState: Bundle) {
     super.onCreate(savedInstanceState)
+    val prefs = PreferenceManager.getDefaultSharedPreferences(this)
+    //println(prefs.getAll)
     val intent = getIntent
     if(intent.getData == null){
       intent.setData(ArticleProvider.CONTENT_URI)
@@ -48,6 +52,7 @@ class MainActivity extends ListActivity {
   override def onCreateOptionsMenu(menu: Menu): Boolean = {
     val result = super.onCreateOptionsMenu(menu)
     menu.add(0, OPTION_DOWNLOAD, 0, R.string.download)
+    menu.add(0, OPTION_SETTING, 1,  R.string.setting)
     result
   }
 
@@ -97,6 +102,11 @@ class MainActivity extends ListActivity {
             mHandler.post(new Runnable() { def run { render } });
           }
         })).start
+        true
+      }
+      case OPTION_SETTING => {
+        val intent = new Intent(MainActivity.this, Class.forName("org.yalab.bourbon.SettingsActivity"))
+        startActivity(intent)
         true
       }
     }

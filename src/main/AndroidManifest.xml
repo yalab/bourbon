@@ -23,6 +23,13 @@
                 <data android:mimeType="vnd.android.cursor.item/org.yalab.bourbon" />
             </intent-filter>
         </activity>
+
+        <activity android:name=".SettingsActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.Main" />
+            </intent-filter>
+        </activity>
+
         <provider android:name="ArticleProvider" android:authorities="org.yalab.bourbon"></provider>
     </application>
     <uses-permission android:name="android.permission.INTERNET" />
