@@ -1,7 +1,7 @@
 package org.yalab.bourbon
 
 import _root_.android.app.{Activity, ListActivity, ProgressDialog}
-import _root_.android.content.{ContentValues, Intent, ContentUris, Context, ContentResolver}
+import _root_.android.content.{ContentValues, Intent, ContentUris, Context, ContentResolver, SharedPreferences}
 import _root_.android.database.Cursor
 import _root_.android.os.{Bundle, Handler}
 import _root_.android.preference.PreferenceManager
@@ -26,11 +26,11 @@ class MainActivity extends ListActivity {
   val TAG = "MainActivity"
   var mResolver: ContentResolver = null
   var mHandler: Handler = null
+  var mPrefs: SharedPreferences = null
 
   override def onCreate(savedInstanceState: Bundle) {
     super.onCreate(savedInstanceState)
-    val prefs = PreferenceManager.getDefaultSharedPreferences(this)
-    //println(prefs.getAll)
+    mPrefs = PreferenceManager.getDefaultSharedPreferences(this)
     val intent = getIntent
     if(intent.getData == null){
       intent.setData(ArticleProvider.CONTENT_URI)
@@ -70,16 +70,24 @@ class MainActivity extends ListActivity {
           def run{
             try{
               val rss = ArticleProvider.downloadRss
-              rss.parse.filter(article => article(ArticleProvider.F_MP3) != null).foreach(article => {
-                val values = new ContentValues
-                article.filter(_._1 != ArticleProvider.F_TIME).foreach{case(k, v) => values.put(k, v.toString)}
-                val c = mResolver.query(ArticleProvider.CONTENT_URI, Array(),
-                                        ArticleProvider.F_GUID + ArticleProvider.EQUAL_PLACEHOLDER,
-                                        Array(article(ArticleProvider.F_GUID).toString), null)
-                if(c.getCount < 1){
-                  mResolver.insert(ArticleProvider.CONTENT_URI, values)
-                }
-              })
+              val lastUpdate = ArticleProvider.DateFormatter.parse(mPrefs.getString("lastUpdate", "Thu, 01 Jan 1970 00:00:00 GMT"))
+              val pubDate = rss.pubDate
+              if(!lastUpdate.equals(pubDate)){
+                rss.parse.filter(article => article(ArticleProvider.F_MP3) != null).foreach(article => {
+                  val values = new ContentValues
+                  article.filter(_._1 != ArticleProvider.F_TIME).foreach{case(k, v) => values.put(k, v.toString)}
+                  val c = mResolver.query(ArticleProvider.CONTENT_URI, Array(),
+                                          ArticleProvider.F_GUID + ArticleProvider.EQUAL_PLACEHOLDER,
+                                          Array(article(ArticleProvider.F_GUID).toString), null)
+                  if(c.getCount < 1){
+                    mResolver.insert(ArticleProvider.CONTENT_URI, values)
+                  }
+                })
+                val dateStr = ArticleProvider.DateFormatter.format(pubDate)
+                val prefEdit = mPrefs.edit
+                prefEdit.putString("lastUpdate", dateStr)
+                prefEdit.commit
+              }
             }catch{
               case e: UnknownHostException => {
                 dialog.dismiss

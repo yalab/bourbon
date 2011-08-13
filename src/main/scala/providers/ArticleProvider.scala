@@ -9,10 +9,11 @@ import _root_.android.util.Log
 import _root_.android.os.Environment
 import _root_.android.provider.BaseColumns
 import _root_.android.util.Log
-import java.net.URL
 import scala.xml.{XML, Elem}
 import java.io.{File, FileOutputStream}
-import java.net.UnknownHostException
+import java.net.{URL, UnknownHostException}
+import java.text.SimpleDateFormat
+import java.util.Locale
 import org.apache.http.impl.client.DefaultHttpClient
 import org.apache.http.client.methods.HttpGet
 
@@ -39,6 +40,7 @@ object ArticleProvider{
   final val EQUAL_PLACEHOLDER = "= ?"
   final val MP3_DIR           = "/Android/data/%s/files/".format(AUTHORITY)
   final val RSS_URL           = "http://www.voanews.com/templates/Articles.rss?sectionPath=/learningenglish/home"
+  final val DateFormatter = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US)
 
   val FIELDS = Map(BaseColumns._ID -> "INTEGER PRIMARY KEY",
                    F_TITLE         -> "TEXT",
@@ -55,6 +57,11 @@ object ArticleProvider{
 
   class VOARss(stream: java.io.InputStream){
     val mXml = XML.load(stream)
+
+    def pubDate = {
+      DateFormatter.parse((mXml \ "channel" \ "pubDate").head.text.toString)
+    }
+
     def parse = {
       mXml \ "channel" \ "item" map(item => {
       val encoded = XML.loadString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<root>" + (item \ "encoded").head.text + "</root>")
