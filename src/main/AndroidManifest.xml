@@ -30,6 +30,12 @@
             </intent-filter>
         </activity>
 
+        <service android:name=".CrawlService">
+            <intent-filter>
+                <action android:name="android.intent.action.Main" />
+            </intent-filter>
+        </service>
+
         <provider android:name="ArticleProvider" android:authorities="org.yalab.bourbon"></provider>
     </application>
     <uses-permission android:name="android.permission.INTERNET" />
