@@ -53,15 +53,10 @@ object ArticleProvider{
                    F_PARAGRAPH     -> "INTEGER",
                    F_TIME          -> "TEXT")
 
-  def download() = {
-    val client = new DefaultHttpClient
-    var xml: Elem = null
-    try{
-      val response = client.execute(new HttpGet(RSS_URL))
-      val entity = response.getEntity
-      xml = XML.load(entity.getContent)
-    }
-    xml \ "channel" \ "item" map(item => {
+  class VOARss(stream: java.io.InputStream){
+    val mXml = XML.load(stream)
+    def parse = {
+      mXml \ "channel" \ "item" map(item => {
       val encoded = XML.loadString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<root>" + (item \ "encoded").head.text + "</root>")
       FIELDS.keys.filter{_ != BaseColumns._ID}.map(k => {
         val v = k match {
@@ -87,6 +82,12 @@ object ArticleProvider{
         (k, v)
       }).toMap
     })
+    }
+  }
+
+  def downloadRss = {
+    val response = (new DefaultHttpClient).execute(new HttpGet(RSS_URL))
+    new VOARss(response.getEntity.getContent)
   }
 
   def mp3File(id: String) = {
