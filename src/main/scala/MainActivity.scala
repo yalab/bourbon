@@ -1,9 +1,9 @@
 package org.yalab.bourbon
 
 import _root_.android.app.{Activity, ListActivity, ProgressDialog}
-import _root_.android.content.{ContentValues, Intent, ContentUris, Context, ContentResolver, SharedPreferences}
+import _root_.android.content.{ContentValues, Intent, ContentUris, Context, ContentResolver, SharedPreferences, ComponentName, ServiceConnection}
 import _root_.android.database.Cursor
-import _root_.android.os.{Bundle, Handler}
+import _root_.android.os.{Bundle, Handler, IBinder}
 import _root_.android.preference.PreferenceManager
 import _root_.android.widget.{TextView, ListView, SimpleCursorAdapter, Toast, ImageView}
 import _root_.android.view.{Menu, MenuItem, View}
@@ -28,6 +28,17 @@ class MainActivity extends ListActivity {
   var mHandler: Handler = null
   var mPrefs: SharedPreferences = null
 
+  private var pipe: ICrawlService = null
+  val crawlService = new ServiceConnection{
+    override def onServiceConnected(name: ComponentName , service: IBinder ){
+      pipe = ICrawlService.Stub.asInterface(service)
+    }
+    override def onServiceDisconnected(name: ComponentName) {
+      pipe = null
+    }
+  }
+
+
   override def onCreate(savedInstanceState: Bundle) {
     super.onCreate(savedInstanceState)
     mPrefs = PreferenceManager.getDefaultSharedPreferences(this)
@@ -38,6 +49,8 @@ class MainActivity extends ListActivity {
     mResolver = getContentResolver
     mHandler  = new Handler
     render
+    val crawlerIntent = new Intent(MainActivity.this, classOf[CrawlService])
+    bindService(crawlerIntent, crawlService, Context.BIND_AUTO_CREATE)
   }
 
   def render{
@@ -59,6 +72,8 @@ class MainActivity extends ListActivity {
   override def onOptionsItemSelected(item: MenuItem): Boolean = {
     item.getItemId match {
       case OPTION_DOWNLOAD => {
+        pipe.send(1)
+        return true
         if(ArticleProvider.isDownloadable(this) == false){
           Toast.makeText(MainActivity.this, getString(R.string.unknown_host_exeption_message), Toast.LENGTH_SHORT).show
           return true

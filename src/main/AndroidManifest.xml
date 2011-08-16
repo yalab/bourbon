@@ -26,7 +26,7 @@
 
         <activity android:name=".SettingsActivity">
             <intent-filter>
-                <action android:name="android.intent.action.Main" />
+                <action android:name="org.yalab.bourbon.ICrawlService" />
             </intent-filter>
         </activity>
 
