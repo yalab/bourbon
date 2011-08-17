@@ -67,15 +67,10 @@ class CrawlService extends Service{
       }
       NO_ERROR
     }catch{
-      case e: UnknownHostException => {
-        ArticleProvider.writeErrorLog(TAG, e)
-        UNKNOWN_HOST_ERROR
-      }
-      case e: IOException => {
-        ArticleProvider.writeErrorLog(TAG, e)
-        IO_ERROR
-      }
+      case e: UnknownHostException => UNKNOWN_HOST_ERROR
+      case e: IOException          => IO_ERROR
       case e => {
+        ArticleProvider.writeErrorLog(TAG, e)
         throw e
         EXCEPTION
       }

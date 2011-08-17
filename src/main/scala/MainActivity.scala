@@ -26,13 +26,13 @@ class MainActivity extends ListActivity {
   var mHandler: Handler = null
   var mPrefs: SharedPreferences = null
 
-  private var pipe: ICrawlService = null
-  val crawlService = new ServiceConnection{
+  private var crawlService: ICrawlService = null
+  val crawlServiceConnection = new ServiceConnection{
     override def onServiceConnected(name: ComponentName , service: IBinder ){
-      pipe = ICrawlService.Stub.asInterface(service)
+      crawlService = ICrawlService.Stub.asInterface(service)
     }
     override def onServiceDisconnected(name: ComponentName) {
-      pipe = null
+      crawlService = null
     }
   }
 
@@ -48,12 +48,12 @@ class MainActivity extends ListActivity {
     mHandler  = new Handler
     render
     val crawlerIntent = new Intent(MainActivity.this, classOf[CrawlService])
-    bindService(crawlerIntent, crawlService, Context.BIND_AUTO_CREATE)
+    bindService(crawlerIntent, crawlServiceConnection, Context.BIND_AUTO_CREATE)
   }
 
   override def onDestroy{
     super.onDestroy
-    unbindService(crawlService)
+    unbindService(crawlServiceConnection)
   }
 
   def render{
@@ -84,18 +84,16 @@ class MainActivity extends ListActivity {
           val dialog = ProgressDialog.show(MainActivity.this, null,
                                            DOWNLOAD_MESSAGE, true, true)
           def run{
-            val result = pipe.send(CrawlService.INVOKE)
+            val result = crawlService.send(CrawlService.INVOKE)
             dialog.dismiss
             mHandler.post(new Runnable() { def run {
-              result match{
-                case CrawlService.UNKNOWN_HOST_ERROR => {
-                  Toast.makeText(MainActivity.this, getString(R.string.unknown_host_exeption_message), Toast.LENGTH_SHORT).show
-                }
-                case CrawlService.IO_ERROR => {
-                  Toast.makeText(MainActivity.this, getString(R.string.io_exeption_message), Toast.LENGTH_SHORT).show
-
-                }
-                case _ => {}
+              val msg_id = result match{
+                case CrawlService.UNKNOWN_HOST_ERROR => R.string.unknown_host_exeption_message
+                case CrawlService.IO_ERROR           => R.string.io_exeption_message
+                case _                               => 0
+              }
+              if(msg_id != 0){
+                Toast.makeText(MainActivity.this, getString(msg_id), Toast.LENGTH_SHORT).show
               }
               render
             } });
