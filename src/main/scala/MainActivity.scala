@@ -7,9 +7,7 @@ import _root_.android.os.{Bundle, Handler, IBinder}
 import _root_.android.preference.PreferenceManager
 import _root_.android.widget.{TextView, ListView, SimpleCursorAdapter, Toast, ImageView}
 import _root_.android.view.{Menu, MenuItem, View}
-import java.io.IOException
 import java.lang.Runnable
-import java.net.UnknownHostException
 
 object MainActivity {
   final val OPTION_DOWNLOAD = Menu.FIRST
@@ -53,6 +51,11 @@ class MainActivity extends ListActivity {
     bindService(crawlerIntent, crawlService, Context.BIND_AUTO_CREATE)
   }
 
+  override def onDestroy{
+    super.onDestroy
+    unbindService(crawlService)
+  }
+
   def render{
     val fields = Array(ArticleProvider.F_TITLE, ArticleProvider.F_PARAGRAPH, ArticleProvider.F_TIME)
     val c = mResolver.query(ArticleProvider.CONTENT_URI, fields, null, null, null)
@@ -72,8 +75,6 @@ class MainActivity extends ListActivity {
   override def onOptionsItemSelected(item: MenuItem): Boolean = {
     item.getItemId match {
       case OPTION_DOWNLOAD => {
-        pipe.send(1)
-        return true
         if(ArticleProvider.isDownloadable(this) == false){
           Toast.makeText(MainActivity.this, getString(R.string.unknown_host_exeption_message), Toast.LENGTH_SHORT).show
           return true
@@ -83,47 +84,21 @@ class MainActivity extends ListActivity {
           val dialog = ProgressDialog.show(MainActivity.this, null,
                                            DOWNLOAD_MESSAGE, true, true)
           def run{
-            try{
-              val rss = ArticleProvider.downloadRss
-              val lastUpdate = ArticleProvider.DateFormatter.parse(mPrefs.getString("lastUpdate", "Thu, 01 Jan 1970 00:00:00 GMT"))
-              val pubDate = rss.pubDate
-              if(!lastUpdate.equals(pubDate)){
-                rss.parse.filter(article => article(ArticleProvider.F_MP3) != null).foreach(article => {
-                  val values = new ContentValues
-                  article.filter(_._1 != ArticleProvider.F_TIME).foreach{case(k, v) => values.put(k, v.toString)}
-                  val c = mResolver.query(ArticleProvider.CONTENT_URI, Array(),
-                                          ArticleProvider.F_GUID + ArticleProvider.EQUAL_PLACEHOLDER,
-                                          Array(article(ArticleProvider.F_GUID).toString), null)
-                  if(c.getCount < 1){
-                    mResolver.insert(ArticleProvider.CONTENT_URI, values)
-                  }
-                })
-                val dateStr = ArticleProvider.DateFormatter.format(pubDate)
-                val prefEdit = mPrefs.edit
-                prefEdit.putString("lastUpdate", dateStr)
-                prefEdit.commit
-              }
-            }catch{
-              case e: UnknownHostException => {
-                dialog.dismiss
-                mHandler.post(new Runnable() { def run {
-                  Toast.makeText(MainActivity.this, getString(R.string.unknown_host_exeption_message), Toast.LENGTH_SHORT).show
-                } })
-                ArticleProvider.writeErrorLog(TAG, e)
-              }
-              case e: IOException => {
-                dialog.dismiss
-                mHandler.post(new Runnable() { def run {
-                  Toast.makeText(MainActivity.this, getString(R.string.io_exeption_message), Toast.LENGTH_SHORT).show
-                } })
-                ArticleProvider.writeErrorLog(TAG, e)
-              }
-              case e => {
-                throw e
-              }
-            }
+            val result = pipe.send(CrawlService.INVOKE)
             dialog.dismiss
-            mHandler.post(new Runnable() { def run { render } });
+            mHandler.post(new Runnable() { def run {
+              result match{
+                case CrawlService.UNKNOWN_HOST_ERROR => {
+                  Toast.makeText(MainActivity.this, getString(R.string.unknown_host_exeption_message), Toast.LENGTH_SHORT).show
+                }
+                case CrawlService.IO_ERROR => {
+                  Toast.makeText(MainActivity.this, getString(R.string.io_exeption_message), Toast.LENGTH_SHORT).show
+
+                }
+                case _ => {}
+              }
+              render
+            } });
           }
         })).start
         true
