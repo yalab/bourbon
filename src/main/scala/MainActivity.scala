@@ -51,6 +51,17 @@ class MainActivity extends ListActivity {
     bindService(crawlerIntent, crawlServiceConnection, Context.BIND_AUTO_CREATE)
   }
 
+  override def onRestart{
+    super.onRestart
+    println("Restart")
+    val message = if(mPrefs.getBoolean("autodownload", false)){
+      CrawlService.START
+    }else{
+      CrawlService.STOP
+    }
+    crawlService.send(message)
+  }
+
   override def onDestroy{
     super.onDestroy
     unbindService(crawlServiceConnection)
