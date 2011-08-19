@@ -35,6 +35,7 @@ object ArticleProvider{
   final val F_MP3       = "mp3"
   final val F_ENCLOSURE = "enclosure"
   final val F_TIME      = "time"
+  final val F_PUBDATE   = "pubDate"
   final val TAG = "ArticleProvider"
 
   final val EQUAL_PLACEHOLDER = "= ?"
@@ -48,7 +49,7 @@ object ArticleProvider{
                    "description"   -> "TEXT",
                    F_GUID          -> "INTEGER",
                    "category"      -> "TEXT",
-                   "date"          -> "TEXT",
+                   F_PUBDATE       -> "TEXT",
                    F_ENCLOSURE     -> "TEXT",
                    F_MP3           -> "TEXT",
                    F_SCRIPT        -> "TEXT",
@@ -59,7 +60,7 @@ object ArticleProvider{
     val mXml = XML.load(stream)
 
     def pubDate = {
-      DateFormatter.parse((mXml \ "channel" \ "pubDate").head.text.toString)
+      DateFormatter.parse((mXml \ "channel" \ F_PUBDATE).head.text.toString)
     }
 
     def parse = {
@@ -221,7 +222,7 @@ class ArticleProvider extends ContentProvider {
     val db = connection.getReadableDatabase
     matcher `match` uri match {
       case INDEX => {
-        db.query(TABLE_NAME, Array(BaseColumns._ID) ++ fields, where, whereArgs, null, null, "date DESC")
+        db.query(TABLE_NAME, Array(BaseColumns._ID) ++ fields, where, whereArgs, null, null, F_PUBDATE + " DESC")
       }
       case SHOW  => {
         val id = uri.getPathSegments().get(1)
