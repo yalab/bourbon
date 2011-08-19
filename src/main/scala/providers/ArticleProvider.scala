@@ -65,31 +65,31 @@ object ArticleProvider{
 
     def parse = {
       mXml \ "channel" \ "item" map(item => {
-      val encoded = XML.loadString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<root>" + (item \ "encoded").head.text + "</root>")
-      FIELDS.keys.filter{_ != BaseColumns._ID}.map(k => {
-        val v = k match {
-          case F_MP3       => {
-            val flashvars = (encoded \\ "param" filter(node => (node \ "@name").toString == "flashvars")) \ "@value"
-            val queryString = flashvars.toString.split("&").map(str => str.split("=")).filter(a => a(0) == "file")
-            if(queryString.size > 0){
-              queryString(0)(1).replaceAll("[ 　]", "")
-            }else{
-              null
+        val encoded = XML.loadString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<root>" + (item \ "encoded").head.text + "</root>")
+        FIELDS.keys.filter{_ != BaseColumns._ID}.map(k => {
+          val v = k match {
+            case F_MP3       => {
+              val flashvars = (encoded \\ "param" filter(node => (node \ "@name").toString == "flashvars")) \ "@value"
+              val queryString = flashvars.toString.split("&").map(str => str.split("=")).filter(a => a(0) == "file")
+              if(queryString.size > 0){
+                queryString(0)(1).replaceAll("[ 　]", "")
+              }else{
+                null
+              }
             }
+            case F_SCRIPT    => {
+              (encoded \\ "p").map(node => {
+                "<p>" + node.text.split(" ").map(word => "<span onclick='search(this.innerHTML)'>%s</span>".format(word)).mkString(" ") + "</p>"
+              }).mkString("\n\n")
+            }
+            case F_ENCLOSURE => item \ k \ "@url"
+            case F_PARAGRAPH => (encoded \\ "p").length
+            case F_TIME      => ""
+            case _           => (item \ k).head.text
           }
-          case F_SCRIPT    => {
-            (encoded \\ "p").map(node => {
-              "<p>" + node.text.split(" ").map(word => "<span onclick='search(this.innerHTML)'>%s</span>".format(word)).mkString(" ") + "</p>"
-            }).mkString("\n\n")
-          }
-          case F_ENCLOSURE => item \ k \ "@url"
-          case F_PARAGRAPH => (encoded \\ "p").length
-          case F_TIME      => ""
-          case _           => (item \ k).head.text
-        }
-        (k, v)
-      }).toMap
-    })
+          (k, v)
+        }).toMap
+      })
     }
   }
 
