@@ -12,8 +12,8 @@ import java.lang.Runnable
 object MainActivity {
   final val OPTION_DOWNLOAD = Menu.FIRST
   final val OPTION_SETTING  = Menu.FIRST + 1
-  val COLUMNS = Array(R.id.title, R.id.paragraph, R.id.icon)
-  val PARAGRAPH_COLUMN_INDEX = 2
+  val COLUMNS = Array(R.id.title, R.id.sentence, R.id.icon)
+  val SENTENCE_COLUMN_INDEX = 2
   val ICON_COLUMN_INDEX = 3
 }
 
@@ -68,7 +68,7 @@ class MainActivity extends ListActivity {
   }
 
   def render{
-    val fields = Array(ArticleProvider.F_TITLE, ArticleProvider.F_PARAGRAPH, ArticleProvider.F_TIME)
+    val fields = Array(ArticleProvider.F_TITLE, ArticleProvider.F_SENTENCE, ArticleProvider.F_TIME)
     val c = mResolver.query(ArticleProvider.CONTENT_URI, fields, null, null, null)
     startManagingCursor(c)
     val adapter = new ArticleAdapter(MainActivity.this, R.layout.row, c,
@@ -129,10 +129,10 @@ class MainActivity extends ListActivity {
     val SEPARATOR = " "
     def setViewValue(v: View, c: Cursor, columnIndex: Int): Boolean = {
       columnIndex match{
-        case MainActivity.PARAGRAPH_COLUMN_INDEX => {
+        case MainActivity.SENTENCE_COLUMN_INDEX => {
           val time = c.getString(c.getColumnIndex(ArticleProvider.F_TIME))
           val text = if(time == null){
-            c.getInt(columnIndex).toString + SEPARATOR + ArticleProvider.F_PARAGRAPH
+            c.getInt(columnIndex).toString + SEPARATOR + ArticleProvider.F_SENTENCE
           }else{
             time
           }

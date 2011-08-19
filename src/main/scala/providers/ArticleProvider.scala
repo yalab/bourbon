@@ -28,12 +28,13 @@ object ArticleProvider{
 
   final val INDEX = 1
   final val SHOW  = 2
-  final val F_PARAGRAPH = "paragraph"
+
   final val F_TITLE     = "title"
   final val F_GUID      = "guid"
   final val F_SCRIPT    = "script"
   final val F_MP3       = "mp3"
   final val F_ENCLOSURE = "enclosure"
+  final val F_SENTENCE  = "sentence"
   final val F_TIME      = "time"
   final val F_PUBDATE   = "pubDate"
   final val TAG = "ArticleProvider"
@@ -53,7 +54,7 @@ object ArticleProvider{
                    F_ENCLOSURE     -> "TEXT",
                    F_MP3           -> "TEXT",
                    F_SCRIPT        -> "TEXT",
-                   F_PARAGRAPH     -> "INTEGER",
+                   F_SENTENCE      -> "INTEGER",
                    F_TIME          -> "TEXT")
 
   class VOARss(stream: java.io.InputStream){
@@ -66,6 +67,8 @@ object ArticleProvider{
     def parse = {
       mXml \ "channel" \ "item" map(item => {
         val encoded = XML.loadString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<root>" + (item \ "encoded").head.text + "</root>")
+        var script: String = null
+        var sentence = 0
         FIELDS.keys.filter{_ != BaseColumns._ID}.map(k => {
           val v = k match {
             case F_MP3       => {
@@ -78,12 +81,15 @@ object ArticleProvider{
               }
             }
             case F_SCRIPT    => {
-              (encoded \\ "p").map(node => {
-                "<p>" + node.text.split(" ").map(word => "<span onclick='search(this.innerHTML)'>%s</span>".format(word)).mkString(" ") + "</p>"
+              script = (encoded \\ "p").map(node => {
+                val text = node.text
+                sentence += "\\.".r.findAllIn(text).size
+                "<p>" + text.split(" ").map(word => "<span onclick='search(this.innerHTML)'>%s</span>".format(word)).mkString(" ") + "</p>"
               }).mkString("\n\n")
+              script
             }
             case F_ENCLOSURE => item \ k \ "@url"
-            case F_PARAGRAPH => (encoded \\ "p").length
+            case F_SENTENCE  => sentence
             case F_TIME      => ""
             case _           => (item \ k).head.text
           }

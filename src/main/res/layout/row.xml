@@ -20,7 +20,7 @@
      android:gravity="left"
      android:layout_toRightOf="@+id/icon" />
   <TextView
-     android:id="@+id/paragraph"
+     android:id="@+id/sentence"
      android:layout_width="fill_parent"
      android:layout_height="fill_parent"
      android:paddingRight="5dip"
