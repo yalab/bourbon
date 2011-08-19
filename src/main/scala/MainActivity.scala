@@ -53,7 +53,6 @@ class MainActivity extends ListActivity {
 
   override def onRestart{
     super.onRestart
-    println("Restart")
     val message = if(mPrefs.getBoolean("autodownload", false)){
       CrawlService.START
     }else{
