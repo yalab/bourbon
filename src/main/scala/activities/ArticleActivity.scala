@@ -5,11 +5,11 @@ import _root_.android.content.{ContentResolver, ContentValues, ContentUris}
 import _root_.android.media.{MediaPlayer, AudioManager}
 import _root_.android.os.{Bundle, Handler}
 import _root_.android.provider.BaseColumns
-import _root_.android.view.{View, KeyEvent}
+import _root_.android.view.{View, KeyEvent, Window}
 import _root_.android.view.View.OnLongClickListener
 import _root_.android.widget.{SeekBar, ImageButton, Toast}
 import _root_.android.widget.SeekBar.OnSeekBarChangeListener
-import _root_.android.webkit.{WebView, WebViewClient}
+import _root_.android.webkit.{WebView, WebViewClient, WebChromeClient}
 import scala.io.Source
 import java.io.IOException
 
@@ -64,6 +64,8 @@ class ArticleActivity extends Activity {
 
   override def onCreate(savedInstanceState: Bundle) {
     super.onCreate(savedInstanceState);
+    requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS)
+
     setContentView(R.layout.article)
     setVolumeControlStream(AudioManager.STREAM_MUSIC)
     val fields = Array(ArticleProvider.F_SCRIPT, ArticleProvider.F_MP3, ArticleProvider.F_TIME)
@@ -144,6 +146,24 @@ class ArticleActivity extends Activity {
     mWebView = findViewById(R.id.webview).asInstanceOf[WebView]
     mWebView.getSettings.setJavaScriptEnabled(true)
     mWebView.getSettings.setUseWideViewPort(true)
+
+    val activity = this;
+    mWebView.setWebChromeClient(new WebChromeClient{
+      var mLoading = false
+      override def onProgressChanged(view: WebView, progress: Int){
+        if(mLoading == false && 0 < progress){
+          activity.setProgressBarIndeterminateVisibility(true)
+          mLoading = true
+        }
+
+        if(mLoading == true && 99 < progress){
+          activity.setProgressBarIndeterminateVisibility(false)
+          mLoading = false
+        }
+      }
+    })
+
+
     mWebView.setWebViewClient(new WebViewClient)
     val js = """
     location.href = 'http://eow.alc.co.jp/' + word.replace(/[,.]/g, '') + '/UTF-8/';
