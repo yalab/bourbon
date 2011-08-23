@@ -169,6 +169,7 @@ class ArticleActivity extends Activity {
     super.onStop
     if(mPlayer != null){
       stopSpeech
+      mPlayButton.setImageResource(R.drawable.play)
     }
   }
 
