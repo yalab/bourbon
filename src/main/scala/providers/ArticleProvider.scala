@@ -42,7 +42,7 @@ object ArticleProvider{
   final val EQUAL_PLACEHOLDER = "= ?"
   final val MP3_DIR           = "/Android/data/%s/files/".format(AUTHORITY)
   final val RSS_URL           = "http://www.voanews.com/templates/Articles.rss?sectionPath=/learningenglish/home"
-  final val DateFormatter = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US)
+  final val RFC822DateTime = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US)
 
   val FIELDS = Map(BaseColumns._ID -> "INTEGER PRIMARY KEY",
                    F_TITLE         -> "TEXT",
@@ -61,7 +61,7 @@ object ArticleProvider{
     val mXml = XML.load(stream)
 
     def pubDate = {
-      DateFormatter.parse((mXml \ "channel" \ F_PUBDATE).head.text.toString)
+      RFC822DateTime.parse((mXml \ "channel" \ F_PUBDATE).head.text.toString)
     }
 
     def parse = {

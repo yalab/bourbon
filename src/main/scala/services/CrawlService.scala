@@ -64,7 +64,7 @@ class CrawlService extends Service{
   def crawl: Int = {
     try{
       val rss = ArticleProvider.downloadRss
-      val lastUpdate = ArticleProvider.DateFormatter.parse(mPrefs.getString("lastUpdate", "Thu, 01 Jan 1970 00:00:00 GMT"))
+      val lastUpdate = ArticleProvider.RFC822DateTime.parse(mPrefs.getString("lastUpdate", "Thu, 01 Jan 1970 00:00:00 GMT"))
       val pubDate = rss.pubDate
       if(!lastUpdate.equals(pubDate)){
         rss.parse.filter(article => article(ArticleProvider.F_MP3) != null).foreach(article => {
@@ -77,7 +77,7 @@ class CrawlService extends Service{
             mResolver.insert(ArticleProvider.CONTENT_URI, values)
           }
         })
-        val dateStr = ArticleProvider.DateFormatter.format(pubDate)
+        val dateStr = ArticleProvider.RFC822DateTime.format(pubDate)
         val prefEdit = mPrefs.edit
         prefEdit.putString("lastUpdate", dateStr)
         prefEdit.commit
