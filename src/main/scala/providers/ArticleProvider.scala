@@ -13,7 +13,7 @@ import scala.xml.{XML, Elem}
 import java.io.{File, FileOutputStream}
 import java.net.{URL, UnknownHostException}
 import java.text.SimpleDateFormat
-import java.util.Locale
+import java.util.{Locale, Calendar}
 import org.apache.http.impl.client.DefaultHttpClient
 import org.apache.http.client.methods.HttpGet
 
@@ -87,6 +87,12 @@ object ArticleProvider{
                 "<p>" + text.split(" ").map(word => "<span onclick='search(this.innerHTML)'>%s</span>".format(word)).mkString(" ") + "</p>"
               }).mkString("\n\n")
               script
+            }
+            case F_PUBDATE   => {
+              val datetime = RFC822DateTime.parse((item \ k).head.text)
+              val cal = Calendar.getInstance
+              cal.setTime(datetime)
+              "%4d-%02d-%02d %02d:%02d:%02d".format(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DATE), cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), cal.get(Calendar.SECOND))
             }
             case F_ENCLOSURE => item \ k \ "@url"
             case F_SENTENCE  => sentence
