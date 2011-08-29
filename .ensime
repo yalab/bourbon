@@ -1,0 +1,6 @@
+(
+:project-package "org.yalab.bourbon"
+:use-sbt t
+:compile-jars ("/opt/android/platforms/android-8/")
+:sources ("src_managed/main/java/org/yalab/bourbon/")
+)
