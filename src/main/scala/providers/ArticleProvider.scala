@@ -26,6 +26,8 @@ object ArticleProvider{
   final val CONTENT_TYPE= "vnd.android.cursor.dir/org.yalab.bourbon"
   final val CONTENT_ITEM_TYPE = "vnd.android.cursor.item/org.yalab.bourbon"
 
+  val EXPIRE_NUM = 30
+
   final val INDEX = 1
   final val SHOW  = 2
 
@@ -219,7 +221,27 @@ class ArticleProvider extends ContentProvider {
   }
 
   def delete(uri: Uri, where: String, whereArgs: Array[String]): Int = {
-    1
+    val db = connection.getWritableDatabase
+    matcher `match` uri match {
+      case INDEX => {
+        val c = query(uri, null, null, null, null)
+        val offset = uri.getQueryParameter("offset")
+        if(offset != null){
+          c.move(offset.toInt)
+        }
+        val target = new Array[String](c.getCount)
+        var index = 0
+        while(c.moveToNext()){
+          val id = c.getInt(c.getColumnIndex("_id"))
+          val path = ArticleProvider.mp3File(id.toString)
+          if(path.exists == true){ path.delete }
+          target.update(index, id.toString)
+          index = index + 1
+        }
+        val placeHolder = target.map(n => "?").mkString(", ")
+        db.delete(TABLE_NAME, BaseColumns._ID + " IN(" + placeHolder + ")", target)
+      }
+    }
   }
 
   def getType(uri: Uri): String = {
@@ -234,7 +256,8 @@ class ArticleProvider extends ContentProvider {
     val db = connection.getReadableDatabase
     matcher `match` uri match {
       case INDEX => {
-        db.query(TABLE_NAME, Array(BaseColumns._ID) ++ fields, where, whereArgs, null, null, F_PUBDATE + " DESC")
+        val _fields = if(fields == null){ Array(BaseColumns._ID) } else { Array(BaseColumns._ID) ++ fields }
+        db.query(TABLE_NAME, _fields, where, whereArgs, null, null, F_PUBDATE + " DESC")
       }
       case SHOW  => {
         val id = uri.getPathSegments().get(1)

@@ -25,6 +25,7 @@ class MainActivity extends ListActivity {
   var mResolver: ContentResolver = null
   var mHandler: Handler = null
   var mPrefs: SharedPreferences = null
+  var mCursor: Cursor = null
 
   private var crawlService: ICrawlService = null
   val crawlServiceConnection = new ServiceConnection{
@@ -35,7 +36,6 @@ class MainActivity extends ListActivity {
       crawlService = null
     }
   }
-
 
   override def onCreate(savedInstanceState: Bundle) {
     super.onCreate(savedInstanceState)
@@ -63,14 +63,20 @@ class MainActivity extends ListActivity {
 
   override def onDestroy{
     super.onDestroy
+    val removeOldArticle = mPrefs.getBoolean("remove_old_article", false)
+    if(removeOldArticle && ArticleProvider.EXPIRE_NUM < mCursor.getCount){
+      val uriBuilder = ArticleProvider.CONTENT_URI.buildUpon
+      uriBuilder.appendQueryParameter("offset", ArticleProvider.EXPIRE_NUM.toString)
+      mResolver.delete(uriBuilder.build, null, null)
+    }
     unbindService(crawlServiceConnection)
   }
 
   def render{
     val fields = Array(ArticleProvider.F_TITLE, ArticleProvider.F_SENTENCE, ArticleProvider.F_TIME)
-    val c = mResolver.query(ArticleProvider.CONTENT_URI, fields, null, null, null)
-    startManagingCursor(c)
-    val adapter = new ArticleAdapter(MainActivity.this, R.layout.row, c,
+    mCursor = mResolver.query(ArticleProvider.CONTENT_URI, fields, null, null, null)
+    startManagingCursor(mCursor)
+    val adapter = new ArticleAdapter(MainActivity.this, R.layout.row, mCursor,
                                      fields, COLUMNS)
     setListAdapter(adapter)
   }

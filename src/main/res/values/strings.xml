@@ -9,4 +9,6 @@
   <string name="download_mp3">Downloading MP3 file.\nPlease wait a few minutes...</string>
   <string name="settings_title">設定</string>
   <string name="auto_rss">一覧の自動ダウンロード</string>
+  <string name="remove_old_article">古い記事を削除する</string>
+  <string name="remove_old_article_summary">最新の記事から30件より以前のデータを自動で削除します</string>
 </resources>
