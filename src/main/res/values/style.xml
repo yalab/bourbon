@@ -3,11 +3,18 @@
   <style name="Theme.Green" parent="@android:style/Theme.Light">
     <item name="android:windowTitleBackgroundStyle">@style/titleBarBackGround</item>
     <item name="android:windowTitleStyle">@style/titleBar</item>
+    <item name="android:alertDialogStyle">@style/HelpDialog</item>
   </style>
   <style name="titleBarBackGround">
     <item name="android:background">@drawable/title_background</item>
   </style>
+
   <style name="titleBar">
-    <item name="android:textColor">#FCFCFC</item>
+    <item name="android:textColor">@color/light_gray</item>
+  </style>
+  <style name="HelpDialog">
+    <item name="android:topDark">@color/light_gray</item>
+    <item name="android:bottomBright">@color/light_gray</item>
+    <item name="android:bottomMedium">@color/light_gray</item>
   </style>
 </resources>

@@ -1,12 +1,12 @@
 package org.yalab.bourbon
 
-import _root_.android.app.{Activity, ListActivity, ProgressDialog}
+import _root_.android.app.{Activity, ListActivity, ProgressDialog, AlertDialog}
 import _root_.android.content.{ContentValues, Intent, ContentUris, Context, ContentResolver, SharedPreferences, ComponentName, ServiceConnection}
 import _root_.android.database.Cursor
 import _root_.android.os.{Bundle, Handler, IBinder}
 import _root_.android.preference.PreferenceManager
 import _root_.android.widget.{TextView, ListView, SimpleCursorAdapter, Toast, ImageView}
-import _root_.android.view.{Menu, MenuItem, View}
+import _root_.android.view.{Menu, MenuItem, View, LayoutInflater}
 import java.lang.Runnable
 
 object MainActivity {
@@ -69,6 +69,12 @@ class MainActivity extends ListActivity {
   def render{
     val fields = Array(ArticleProvider.F_TITLE, ArticleProvider.F_SENTENCE, ArticleProvider.F_TIME)
     val c = mResolver.query(ArticleProvider.CONTENT_URI, fields, null, null, null)
+    if(c.getCount < 1){
+      (new AlertDialog.Builder(this))
+        .setView(getLayoutInflater.inflate(R.layout.first_step, null))
+        .setPositiveButton("OK", null)
+        .show
+    }
     startManagingCursor(c)
     val adapter = new ArticleAdapter(MainActivity.this, R.layout.row, c,
                                      fields, COLUMNS)
