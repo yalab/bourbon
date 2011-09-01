@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <style name="Theme.Green" parent="@android:style/Theme.Light">
+    <item name="android:windowTitleBackgroundStyle">@style/titleBarBackGround</item>
+    <item name="android:windowTitleStyle">@style/titleBar</item>
+  </style>
+  <style name="titleBarBackGround">
+    <item name="android:background">@drawable/title_background</item>
+  </style>
+  <style name="titleBar">
+    <item name="android:textColor">#FCFCFC</item>
+  </style>
+</resources>
