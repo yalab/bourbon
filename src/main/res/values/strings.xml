@@ -1,5 +1,5 @@
 <resources>
-  <string name="app_name">レッッツVOA</string>
+  <string name="app_name">レッッツVOA Beta</string>
   <string name="download">Download</string>
   <string name="setting">設定</string>
   <string name="unknown_host_exeption_message">インターネットにつながっていません</string>
