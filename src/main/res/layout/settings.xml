@@ -5,5 +5,9 @@
     <CheckBoxPreference
       android:key="autodownload"
       android:title="@string/auto_rss" />
+    <CheckBoxPreference
+      android:key="remove_old_article"
+      android:title="@string/remove_old_article"
+      android:summary="@string/remove_old_article_summary" />
   </PreferenceCategory>
 </PreferenceScreen>
