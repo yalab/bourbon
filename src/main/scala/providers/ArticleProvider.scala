@@ -19,7 +19,7 @@ import org.apache.http.client.methods.HttpGet
 
 object ArticleProvider{
   final val DATABASE_NAME    = "bourbon.db"
-  final val DATABASE_VERSION = 1
+  final val DATABASE_VERSION = 2
   final val AUTHORITY = "org.yalab.bourbon"
   final val TABLE_NAME = "articles"
   final val CONTENT_URI = Uri.parse("content://" + AUTHORITY + "/" + TABLE_NAME)
@@ -39,6 +39,9 @@ object ArticleProvider{
   final val F_SENTENCE  = "sentence"
   final val F_TIME      = "time"
   final val F_PUBDATE   = "pubDate"
+  final val F_CURRENT_POSITION = "current_position"
+  final val F_BOOKMARKED_AT    = "bookmarked_at"
+  final val F_SCROLL_Y         = "scroll_y"
   final val TAG = "ArticleProvider"
 
   final val EQUAL_PLACEHOLDER = "= ?"
@@ -46,18 +49,21 @@ object ArticleProvider{
   final val RSS_URL           = "http://www.voanews.com/templates/Articles.rss?sectionPath=/learningenglish/home"
   final val RFC822DateTime = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US)
 
-  val FIELDS = Map(BaseColumns._ID -> "INTEGER PRIMARY KEY",
-                   F_TITLE         -> "TEXT",
-                   "link"          -> "TEXT",
-                   "description"   -> "TEXT",
-                   F_GUID          -> "INTEGER",
-                   "category"      -> "TEXT",
-                   F_PUBDATE       -> "TEXT",
-                   F_ENCLOSURE     -> "TEXT",
-                   F_MP3           -> "TEXT",
-                   F_SCRIPT        -> "TEXT",
-                   F_SENTENCE      -> "INTEGER",
-                   F_TIME          -> "TEXT")
+  val FIELDS = Map(BaseColumns._ID    -> "INTEGER PRIMARY KEY",
+                   F_TITLE            -> "TEXT",
+                   "link"             -> "TEXT",
+                   "description"      -> "TEXT",
+                   F_GUID             -> "INTEGER",
+                   "category"         -> "TEXT",
+                   F_PUBDATE          -> "TEXT",
+                   F_ENCLOSURE        -> "TEXT",
+                   F_MP3              -> "TEXT",
+                   F_SCRIPT           -> "TEXT",
+                   F_SENTENCE         -> "INTEGER",
+                   F_TIME             -> "TEXT",
+                   F_CURRENT_POSITION -> "INTEGER",
+                   F_BOOKMARKED_AT    -> "TEXT",
+                   F_SCROLL_Y         -> "INTEGER")
 
   class VOARss(stream: java.io.InputStream){
     val mXml = XML.load(stream)
@@ -277,6 +283,19 @@ class ArticleProvider extends ContentProvider {
     }
 
     def onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+      if(oldVersion == 1 && newVersion == 2){
+        var keys: Set[String] = ArticleProvider.FIELDS.keys.toSet
+        val c = db.rawQuery("PRAGMA table_info('articles')", null)
+        while(c.moveToNext){
+          val fieldName = c.getString(c.getColumnIndex("name"))
+          if(keys.contains(fieldName)){
+            keys = keys - fieldName
+          }
+        }
+        for(k <- keys){
+          db.execSQL("ALTER TABLE %s ADD COLUMN %s %s".format(TABLE_NAME, k, ArticleProvider.FIELDS(k)))
+        }
+      }
     }
   }
 }
