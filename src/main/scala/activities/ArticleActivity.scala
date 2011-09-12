@@ -175,7 +175,8 @@ class ArticleActivity extends Activity {
     keyCode match{
       case KeyEvent.KEYCODE_BACK => {
         if(mWebView.canGoBack){
-          mWebView.goBack
+          val size = mWebView.copyBackForwardList.getSize
+          mWebView.goBackOrForward(-(size - 1))
           true
         }else{
           super.onKeyDown(keyCode, event)
