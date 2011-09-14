@@ -4,6 +4,7 @@ import _root_.android.app.{Activity, ProgressDialog}
 import _root_.android.content.{ContentResolver, ContentValues, ContentUris}
 import _root_.android.media.{MediaPlayer, AudioManager}
 import _root_.android.os.{Bundle, Handler}
+import _root_.android.net.Uri
 import _root_.android.provider.BaseColumns
 import _root_.android.view.{View, KeyEvent, Window}
 import _root_.android.view.View.OnLongClickListener
@@ -22,6 +23,7 @@ class ArticleActivity extends Activity {
   var mProgressRefresher: Handler = null
   var mWebView: WebView = null
   var mResolver: ContentResolver = null
+  var mUri: Uri = null
   val TAG = "ArticleActivity"
   val ONE_HOUR   = 1000 * 60 * 60
   val ONE_MINUTE = 1000 * 60
@@ -76,6 +78,7 @@ class ArticleActivity extends Activity {
     val mp3      = c.getString(c.getColumnIndex(ArticleProvider.F_MP3))
     val time     = c.getString(c.getColumnIndex(ArticleProvider.F_TIME))
     val id       = c.getLong(c.getColumnIndex(BaseColumns._ID))
+    mUri = ContentUris.withAppendedId(ArticleProvider.CONTENT_URI, id)
     mPlayButton  = findViewById(R.id.play_button).asInstanceOf[ImageButton]
 
     if(ArticleProvider.mp3File(id.toString).exists == false &&
@@ -146,7 +149,6 @@ class ArticleActivity extends Activity {
     mWebView = findViewById(R.id.webview).asInstanceOf[WebView]
     mWebView.getSettings.setJavaScriptEnabled(true)
     mWebView.getSettings.setUseWideViewPort(true)
-
     val activity = this;
     mWebView.setWebChromeClient(new WebChromeClient{
       var mLoading = false
@@ -189,6 +191,10 @@ class ArticleActivity extends Activity {
   override def onStop{
     super.onStop
     if(mPlayer != null){
+      val values = new ContentValues(2)
+      values.put(ArticleProvider.F_SCROLL_Y, mWebView.getScrollY.asInstanceOf[java.lang.Integer])
+      values.put(ArticleProvider.F_CURRENT_POSITION, mPlayer.getCurrentPosition.asInstanceOf[java.lang.Integer])
+      mResolver.update(mUri, values, null, null)
       stopSpeech
       mPlayButton.setImageResource(R.drawable.play)
     }
