@@ -70,7 +70,7 @@ class ArticleActivity extends Activity {
 
     setContentView(R.layout.article)
     setVolumeControlStream(AudioManager.STREAM_MUSIC)
-    val fields = Array(ArticleProvider.F_SCRIPT, ArticleProvider.F_MP3, ArticleProvider.F_TIME)
+    val fields = Array(ArticleProvider.F_SCRIPT, ArticleProvider.F_MP3, ArticleProvider.F_TIME, ArticleProvider.F_CURRENT_POSITION, ArticleProvider.F_SCROLL_Y)
     mResolver = getContentResolver
     val c = mResolver.query(getIntent.getData, fields, null, null, null)
     c.moveToFirst
@@ -78,6 +78,8 @@ class ArticleActivity extends Activity {
     val mp3      = c.getString(c.getColumnIndex(ArticleProvider.F_MP3))
     val time     = c.getString(c.getColumnIndex(ArticleProvider.F_TIME))
     val id       = c.getLong(c.getColumnIndex(BaseColumns._ID))
+    val position = c.getInt(c.getColumnIndex(ArticleProvider.F_CURRENT_POSITION))
+    val scrollY = c.getInt(c.getColumnIndex(ArticleProvider.F_SCROLL_Y))
     mUri = ContentUris.withAppendedId(ArticleProvider.CONTENT_URI, id)
     mPlayButton  = findViewById(R.id.play_button).asInstanceOf[ImageButton]
 
@@ -135,7 +137,10 @@ class ArticleActivity extends Activity {
 
             mSeekBar.setMax(mDuration)
             mSeekBar.setOnSeekBarChangeListener(seekListener)
-
+            if(position > 0){
+              mPlayer.seekTo(position)
+              mSeekBar.setProgress(position)
+            }
             mProgressRefresher = new Handler
             dialog.dismiss
           }
@@ -143,6 +148,10 @@ class ArticleActivity extends Activity {
       }
     })).start
     render(script)
+    if(scrollY > 0){
+      //println(scrollY)
+      //mWebView.loadUrl("javascript:window.onload=function(){window.scrollTo(0, %s);};".format(scrollY))
+    }
   }
 
   def render(script:String) {
