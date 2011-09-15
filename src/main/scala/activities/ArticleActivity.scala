@@ -149,8 +149,7 @@ class ArticleActivity extends Activity {
     })).start
     render(script)
     if(scrollY > 0){
-      //println(scrollY)
-      //mWebView.loadUrl("javascript:window.onload=function(){window.scrollTo(0, %s);};".format(scrollY))
+      mWebView.loadUrl("javascript:window.onload=function(){window.scrollTo(0, %s);};".format(scrollY))
     }
   }
 
@@ -171,6 +170,14 @@ class ArticleActivity extends Activity {
           activity.setProgressBarIndeterminateVisibility(false)
           mLoading = false
         }
+      }
+      override def onJsAlert(view: WebView, url: String, message: String, result: android.webkit.JsResult): Boolean = {
+        val values = new ContentValues(2)
+        values.put(ArticleProvider.F_SCROLL_Y, message.toInt.asInstanceOf[java.lang.Integer])
+        values.put(ArticleProvider.F_CURRENT_POSITION, mPlayer.getCurrentPosition.asInstanceOf[java.lang.Integer])
+        mResolver.update(mUri, values, null, null)
+        result.confirm
+        true
       }
     })
 
@@ -200,10 +207,7 @@ class ArticleActivity extends Activity {
   override def onStop{
     super.onStop
     if(mPlayer != null){
-      val values = new ContentValues(2)
-      values.put(ArticleProvider.F_SCROLL_Y, mWebView.getScrollY.asInstanceOf[java.lang.Integer])
-      values.put(ArticleProvider.F_CURRENT_POSITION, mPlayer.getCurrentPosition.asInstanceOf[java.lang.Integer])
-      mResolver.update(mUri, values, null, null)
+      mWebView.loadUrl("javascript:alert(document.body.scrollTop);")
       stopSpeech
       mPlayButton.setImageResource(R.drawable.play)
     }
