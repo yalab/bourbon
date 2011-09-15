@@ -104,8 +104,18 @@ object ArticleProvider{
             }
             case F_ENCLOSURE => item \ k \ "@url"
             case F_SENTENCE  => sentence
-            case F_TIME      => ""
-            case _           => (item \ k).head.text
+            case _           => {
+              try{
+                (item \ k).head.text
+              } catch {
+                case _ => {
+                  FIELDS(k) match{
+                    case "TEXT"    => ""
+                    case "INTEGER" => 0
+                  }
+                }
+              }
+            }
           }
           (k, v)
         }).toMap
