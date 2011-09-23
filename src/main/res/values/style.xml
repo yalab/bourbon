@@ -13,7 +13,8 @@
     <item name="android:textColor">@color/light_gray</item>
   </style>
   <style name="HelpDialog">
-    <item name="android:topDark">@color/light_gray</item>
+    <item name="android:topDark">@color/dark_gray</item>
+    <item name="android:topBright">@color/dark_gray</item>
     <item name="android:bottomBright">@color/light_gray</item>
     <item name="android:bottomMedium">@color/light_gray</item>
   </style>

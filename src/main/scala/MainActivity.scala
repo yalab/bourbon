@@ -27,6 +27,7 @@ class MainActivity extends ListActivity {
   var mHandler: Handler = null
   var mPrefs: SharedPreferences = null
   var mCursor: Cursor = null
+  var mListView: ListView = null
 
   private var crawlService: ICrawlService = null
   val crawlServiceConnection = new ServiceConnection{
@@ -46,6 +47,7 @@ class MainActivity extends ListActivity {
       intent.setData(ArticleProvider.CONTENT_URI)
     }
     mResolver = getContentResolver
+    mListView = getListView
     mHandler  = new Handler
     render
     val crawlerIntent = new Intent(MainActivity.this, classOf[CrawlService])
@@ -140,6 +142,10 @@ class MainActivity extends ListActivity {
 
   override def onCreateContextMenu(menu: ContextMenu, v: View, menuInfo: ContextMenu.ContextMenuInfo){
     super.onCreateContextMenu(menu, v, menuInfo)
+    val info = menuInfo.asInstanceOf[AdapterView.AdapterContextMenuInfo]
+    val c = mListView.getItemAtPosition(info.position).asInstanceOf[Cursor]
+    val title = c.getString(c.getColumnIndex(ArticleProvider.F_TITLE))
+    menu.setHeaderTitle(title)
     getMenuInflater.inflate(R.menu.main_context, menu)
   }
 
