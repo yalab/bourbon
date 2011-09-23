@@ -32,6 +32,7 @@ object ArticleProvider{
   final val SHOW  = 2
 
   final val F_TITLE     = "title"
+  final val F_LINK      = "link"
   final val F_GUID      = "guid"
   final val F_SCRIPT    = "script"
   final val F_MP3       = "mp3"
@@ -51,7 +52,7 @@ object ArticleProvider{
 
   val FIELDS = Map(BaseColumns._ID    -> "INTEGER PRIMARY KEY",
                    F_TITLE            -> "TEXT",
-                   "link"             -> "TEXT",
+                   F_LINK             -> "TEXT",
                    "description"      -> "TEXT",
                    F_GUID             -> "INTEGER",
                    "category"         -> "TEXT",

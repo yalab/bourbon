@@ -3,10 +3,11 @@ package org.yalab.bourbon
 import _root_.android.app.{Activity, ListActivity, ProgressDialog, AlertDialog}
 import _root_.android.content.{ContentValues, Intent, ContentUris, Context, ContentResolver, SharedPreferences, ComponentName, ServiceConnection}
 import _root_.android.database.Cursor
+import _root_.android.net.Uri
 import _root_.android.os.{Bundle, Handler, IBinder}
 import _root_.android.preference.PreferenceManager
-import _root_.android.widget.{TextView, ListView, SimpleCursorAdapter, Toast, ImageView}
-import _root_.android.view.{Menu, MenuItem, View, LayoutInflater}
+import _root_.android.widget.{TextView, ListView, SimpleCursorAdapter, Toast, ImageView, AdapterView}
+import _root_.android.view.{Menu, MenuItem, View, LayoutInflater, ContextMenu}
 import java.lang.Runnable
 
 object MainActivity {
@@ -85,6 +86,7 @@ class MainActivity extends ListActivity {
     val adapter = new ArticleAdapter(MainActivity.this, R.layout.row, mCursor,
                                      fields, COLUMNS)
     setListAdapter(adapter)
+    registerForContextMenu(getListView)
   }
 
   override def onCreateOptionsMenu(menu: Menu): Boolean = {
@@ -134,6 +136,27 @@ class MainActivity extends ListActivity {
   override def onListItemClick(l: ListView, v: View, position: Int, id: Long) {
     val uri = ContentUris.withAppendedId(getIntent.getData, id)
     startActivity(new Intent(Intent.ACTION_VIEW, uri))
+  }
+
+  override def onCreateContextMenu(menu: ContextMenu, v: View, menuInfo: ContextMenu.ContextMenuInfo){
+    super.onCreateContextMenu(menu, v, menuInfo)
+    getMenuInflater.inflate(R.menu.main_context, menu)
+  }
+
+  override def onContextItemSelected(item: MenuItem): Boolean = {
+    item.getItemId match{
+      case R.id.open => {
+        val info = item.getMenuInfo.asInstanceOf[AdapterView.AdapterContextMenuInfo]
+        val itemView = info.targetView
+        val uri = ContentUris.withAppendedId(getIntent.getData, info.id)
+        val c = mResolver.query(uri, Array(ArticleProvider.F_LINK), null, null, null)
+        c.moveToFirst
+        val link = c.getString(c.getColumnIndex(ArticleProvider.F_LINK))
+        val intent = new Intent(Intent.ACTION_VIEW, Uri.parse(link))
+        startActivity(intent)
+      }
+    }
+    true
   }
 
   class ArticleViewBinder extends SimpleCursorAdapter.ViewBinder{
