@@ -1,13 +1,13 @@
 package org.yalab.bourbon
 
-import _root_.android.app.{Activity, ListActivity, ProgressDialog, AlertDialog}
+import _root_.android.app.{Activity, ListActivity, ProgressDialog, Dialog}
 import _root_.android.content.{ContentValues, Intent, ContentUris, Context, ContentResolver, SharedPreferences, ComponentName, ServiceConnection}
 import _root_.android.database.Cursor
 import _root_.android.net.Uri
 import _root_.android.os.{Bundle, Handler, IBinder}
 import _root_.android.preference.PreferenceManager
 import _root_.android.widget.{TextView, ListView, SimpleCursorAdapter, Toast, ImageView, AdapterView}
-import _root_.android.view.{Menu, MenuItem, View, LayoutInflater, ContextMenu}
+import _root_.android.view.{Menu, MenuItem, View, LayoutInflater, ContextMenu, Window}
 import java.lang.Runnable
 
 object MainActivity {
@@ -79,10 +79,15 @@ class MainActivity extends ListActivity {
     val fields = Array(ArticleProvider.F_TITLE, ArticleProvider.F_SENTENCE, ArticleProvider.F_TIME)
     mCursor = mResolver.query(ArticleProvider.CONTENT_URI, fields, null, null, null)
     if(mCursor.getCount < 1){
-      (new AlertDialog.Builder(this))
-        .setView(getLayoutInflater.inflate(R.layout.first_step, null))
-        .setPositiveButton("OK", null)
-        .show
+      val dialog = new Dialog(this)
+      dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+      dialog.setContentView(R.layout.first_step)
+      dialog.show
+      dialog.findViewById(R.id.ok_button).setOnClickListener(new View.OnClickListener{
+        def onClick(v: View){
+          dialog.dismiss
+        }
+      })
     }
     startManagingCursor(mCursor)
     val adapter = new ArticleAdapter(MainActivity.this, R.layout.row, mCursor,
