@@ -156,7 +156,7 @@ class MainActivity extends ListActivity {
 
   override def onContextItemSelected(item: MenuItem): Boolean = {
     item.getItemId match{
-      case R.id.open => {
+      case R.id.open_in_browser => {
         val info = item.getMenuInfo.asInstanceOf[AdapterView.AdapterContextMenuInfo]
         val itemView = info.targetView
         val uri = ContentUris.withAppendedId(getIntent.getData, info.id)
