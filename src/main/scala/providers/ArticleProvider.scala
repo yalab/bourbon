@@ -5,10 +5,10 @@ import _root_.android.database.Cursor
 import _root_.android.database.sqlite.{SQLiteDatabase, SQLiteOpenHelper}
 import _root_.android.net.{Uri, ConnectivityManager}
 import _root_.android.net.wifi.WifiManager
+import _root_.android.text.format.Time
 import _root_.android.util.Log
 import _root_.android.os.Environment
 import _root_.android.provider.BaseColumns
-import _root_.android.util.Log
 import scala.xml.{XML, Elem}
 import java.io.{File, FileOutputStream}
 import java.net.{URL, UnknownHostException}
@@ -43,7 +43,7 @@ object ArticleProvider{
   final val F_CURRENT_POSITION = "current_position"
   final val F_BOOKMARKED_AT    = "bookmarked_at"
   final val F_SCROLL_Y         = "scroll_y"
-  final val F_DELETED          = "deleted"
+  final val F_DELETED_AT       = "deleted_at"
   final val TAG = "ArticleProvider"
 
   final val EQUAL_PLACEHOLDER = "= ?"
@@ -66,9 +66,9 @@ object ArticleProvider{
                    F_CURRENT_POSITION -> "INTEGER",
                    F_BOOKMARKED_AT    -> "TEXT",
                    F_SCROLL_Y         -> "INTEGER",
-                   F_DELETED          -> "INTEGER DEFAULT '0'")
-  val INDICES = Map("articles_guid_ix"    -> F_GUID,
-                    "articles_deleted_ix" -> F_DELETED)
+                   F_DELETED_AT       -> "TEXT")
+  val INDICES = Map("articles_guid_ix"       -> F_GUID,
+                    "articles_deleted_at_ix" -> (F_PUBDATE + "," + F_DELETED_AT))
 
   class VOARss(stream: java.io.InputStream){
     val mXml = XML.load(stream)
@@ -264,9 +264,12 @@ class ArticleProvider extends ContentProvider {
         }
         val placeHolder = target.map(n => "?").mkString(", ")
         val values = new ContentValues
-        for(k <- FIELDS.keys.filter(k => k != BaseColumns._ID && k != F_GUID)){
+        for(k <- FIELDS.keys.filter(k => k != BaseColumns._ID && k != F_GUID && k != F_DELETED_AT)){
           values.putNull(k)
         }
+        val deletedAt = new Time
+        deletedAt.setToNow
+        values.put(F_DELETED_AT, deletedAt.format("%Y-%m-%d %H:%M:%S"))
         db.update(TABLE_NAME, values, BaseColumns._ID + " IN(" + placeHolder + ")", target)
       }
     }
@@ -285,7 +288,10 @@ class ArticleProvider extends ContentProvider {
     matcher `match` uri match {
       case INDEX => {
         val _fields = if(fields == null){ Array(BaseColumns._ID) } else { Array(BaseColumns._ID) ++ fields }
-        db.query(TABLE_NAME, _fields, where, whereArgs, null, null, F_PUBDATE + " DESC")
+        val _where = if(where == null){ F_DELETED_AT + " is NULL" } else { where }
+        println(_where)
+        println(whereArgs)
+        db.query(TABLE_NAME, _fields, _where, whereArgs, null, null, F_PUBDATE + " DESC")
       }
       case SHOW  => {
         val id = uri.getPathSegments().get(1)
