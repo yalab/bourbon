@@ -43,6 +43,7 @@ object ArticleProvider{
   final val F_CURRENT_POSITION = "current_position"
   final val F_BOOKMARKED_AT    = "bookmarked_at"
   final val F_SCROLL_Y         = "scroll_y"
+  final val F_DELETED          = "deleted"
   final val TAG = "ArticleProvider"
 
   final val EQUAL_PLACEHOLDER = "= ?"
@@ -64,7 +65,10 @@ object ArticleProvider{
                    F_TIME             -> "TEXT",
                    F_CURRENT_POSITION -> "INTEGER",
                    F_BOOKMARKED_AT    -> "TEXT",
-                   F_SCROLL_Y         -> "INTEGER")
+                   F_SCROLL_Y         -> "INTEGER",
+                   F_DELETED          -> "INTEGER DEFAULT '0'")
+  val INDICES = Map("articles_guid_ix"    -> F_GUID,
+                    "articles_deleted_ix" -> F_DELETED)
 
   class VOARss(stream: java.io.InputStream){
     val mXml = XML.load(stream)
@@ -110,7 +114,7 @@ object ArticleProvider{
                 (item \ k).head.text
               } catch {
                 case _ => {
-                  FIELDS(k) match{
+                  FIELDS(k).split(" ")(0) match{
                     case "TEXT"    => ""
                     case "INTEGER" => 0
                   }
@@ -289,23 +293,32 @@ class ArticleProvider extends ContentProvider {
     def onCreate(db: SQLiteDatabase) {
       val sql = "CREATE TABLE %s (%s);".format(TABLE_NAME, FIELDS.map{case(k, v) => k + " " + v }.mkString(", "))
       db.execSQL(sql)
-      val index_column = ArticleProvider.F_GUID
-      db.execSQL("CREATE INDEX %s_%s_ix ON %s(%s)".format(TABLE_NAME, index_column, TABLE_NAME, index_column))
+      INDICES.foreach{case(name, fields) => db.execSQL("CREATE INDEX %s ON %s(%s)".format(name, TABLE_NAME, fields)) }
     }
 
     def onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-      if(oldVersion == 1 && newVersion == 2){
-        var keys: Set[String] = ArticleProvider.FIELDS.keys.toSet
-        val c = db.rawQuery("PRAGMA table_info('articles')", null)
-        while(c.moveToNext){
-          val fieldName = c.getString(c.getColumnIndex("name"))
-          if(keys.contains(fieldName)){
-            keys = keys - fieldName
-          }
+      var fields: Set[String] = FIELDS.keys.toSet
+      val tc = db.rawQuery("PRAGMA table_info('articles')", null)
+      while(tc.moveToNext){
+        val fieldName = tc.getString(tc.getColumnIndex("name"))
+        if(fields.contains(fieldName)){
+          fields = fields - fieldName
         }
-        for(k <- keys){
-          db.execSQL("ALTER TABLE %s ADD COLUMN %s %s".format(TABLE_NAME, k, ArticleProvider.FIELDS(k)))
+      }
+      for(field <- fields){
+        db.execSQL("ALTER TABLE %s ADD COLUMN %s %s".format(TABLE_NAME, field, ArticleProvider.FIELDS(field)))
+      }
+
+      var indices: Set[String] = INDICES.keys.toSet
+      val ic = db.rawQuery("PRAGMA index_list('articles')", null)
+      while(ic.moveToNext){
+        val indexName = ic.getString(ic.getColumnIndex("name"))
+        if(indices.contains(indexName)){
+          indices = indices - indexName
         }
+      }
+      for(index <- indices){
+        db.execSQL("CREATE INDEX %s ON %s(%s)".format(index, TABLE_NAME, INDICES(index)))
       }
     }
   }
