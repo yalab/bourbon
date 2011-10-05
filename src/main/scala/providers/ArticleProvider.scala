@@ -19,7 +19,7 @@ import org.apache.http.client.methods.HttpGet
 
 object ArticleProvider{
   final val DATABASE_NAME    = "bourbon.db"
-  final val DATABASE_VERSION = 2
+  final val DATABASE_VERSION = 3
   final val AUTHORITY = "org.yalab.bourbon"
   final val TABLE_NAME = "articles"
   final val CONTENT_URI = Uri.parse("content://" + AUTHORITY + "/" + TABLE_NAME)
