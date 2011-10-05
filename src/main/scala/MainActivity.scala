@@ -155,9 +155,13 @@ class MainActivity extends ListActivity {
   }
 
   override def onContextItemSelected(item: MenuItem): Boolean = {
+    val info = item.getMenuInfo.asInstanceOf[AdapterView.AdapterContextMenuInfo]
     item.getItemId match{
+      case R.id.open => {
+        val uri = ContentUris.withAppendedId(getIntent.getData, info.id)
+        startActivity(new Intent(Intent.ACTION_VIEW, uri))
+      }
       case R.id.open_in_browser => {
-        val info = item.getMenuInfo.asInstanceOf[AdapterView.AdapterContextMenuInfo]
         val itemView = info.targetView
         val uri = ContentUris.withAppendedId(getIntent.getData, info.id)
         val c = mResolver.query(uri, Array(ArticleProvider.F_LINK), null, null, null)

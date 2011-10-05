@@ -12,5 +12,6 @@
   <string name="first_step">インターネットに接続できる環境で\n「Menu」→「ダウンロード」\nを実行して一覧をダウンロードしてください</string>
   <string name="remove_old_article">古い記事を削除する</string>
   <string name="remove_old_article_summary">最新の記事から30件より以前のデータを自動で削除します</string>
+  <string name="open">開く</string>
   <string name="open_in_browser_action">ブラウザで開く</string>
 </resources>
