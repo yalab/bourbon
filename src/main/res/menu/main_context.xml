@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-  <item android:id="@+id/open" android:title="@string/open" />
+  <item android:id="@+id/open" android:title="@string/open_action" />
   <item android:id="@+id/open_in_browser" android:title="@string/open_in_browser_action" />
+  <item android:id="@+id/destroy" android:title="@string/destroy_action" />
 </menu>

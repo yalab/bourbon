@@ -1,7 +1,7 @@
 package org.yalab.bourbon
 
-import _root_.android.app.{Activity, ListActivity, ProgressDialog, Dialog}
-import _root_.android.content.{ContentValues, Intent, ContentUris, Context, ContentResolver, SharedPreferences, ComponentName, ServiceConnection}
+import _root_.android.app.{Activity, ListActivity, ProgressDialog, Dialog, AlertDialog}
+import _root_.android.content.{ContentValues, Intent, ContentUris, Context, ContentResolver, SharedPreferences, ComponentName, ServiceConnection, DialogInterface}
 import _root_.android.database.Cursor
 import _root_.android.net.Uri
 import _root_.android.os.{Bundle, Handler, IBinder}
@@ -169,6 +169,19 @@ class MainActivity extends ListActivity {
         val link = c.getString(c.getColumnIndex(ArticleProvider.F_LINK))
         val intent = new Intent(Intent.ACTION_VIEW, Uri.parse(link))
         startActivity(intent)
+      }
+      case R.id.destroy => {
+        val dialog = new AlertDialog.Builder(this)
+        dialog.setMessage(R.string.are_you_sure_destroy)
+        dialog.setPositiveButton("Yes", new DialogInterface.OnClickListener{
+          override def onClick(dialog: DialogInterface, which: Int){
+            println(info.id)
+          }
+        })
+
+        dialog.setNegativeButton("No", null)
+        dialog.setCancelable(true)
+        dialog.create.show
       }
     }
     true
