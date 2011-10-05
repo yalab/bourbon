@@ -247,10 +247,13 @@ class ArticleProvider extends ContentProvider {
       case INDEX => {
         val c = query(uri, null, null, null, null)
         val offset = uri.getQueryParameter("offset")
-        if(offset != null){
+        val count = if(offset != null){
           c.move(offset.toInt)
+          c.getCount - offset.toInt
+        }else{
+          c.getCount
         }
-        val target = new Array[String](c.getCount)
+        val target = new Array[String](count)
         var index = 0
         while(c.moveToNext()){
           val id = c.getInt(c.getColumnIndex("_id"))
@@ -260,7 +263,11 @@ class ArticleProvider extends ContentProvider {
           index = index + 1
         }
         val placeHolder = target.map(n => "?").mkString(", ")
-        db.delete(TABLE_NAME, BaseColumns._ID + " IN(" + placeHolder + ")", target)
+        val values = new ContentValues
+        for(k <- FIELDS.keys.filter(k => k != BaseColumns._ID && k != F_GUID)){
+          values.putNull(k)
+        }
+        db.update(TABLE_NAME, values, BaseColumns._ID + " IN(" + placeHolder + ")", target)
       }
     }
   }
