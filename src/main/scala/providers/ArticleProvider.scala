@@ -115,7 +115,7 @@ object ArticleProvider{
               } catch {
                 case _ => {
                   FIELDS(k).split(" ")(0) match{
-                    case "TEXT"    => ""
+                    case "TEXT"    => null
                     case "INTEGER" => 0
                   }
                 }
@@ -123,7 +123,7 @@ object ArticleProvider{
             }
           }
           (k, v)
-        }).toMap
+        }).toMap.filter{case(k, v) => v != null}
       })
     }
   }
