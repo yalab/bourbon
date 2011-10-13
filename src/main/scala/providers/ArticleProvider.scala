@@ -14,7 +14,7 @@ import scala.collection.mutable.ListBuffer
 import java.io.{File, FileOutputStream}
 import java.net.{URL, UnknownHostException}
 import java.text.SimpleDateFormat
-import java.util.{Locale, Calendar}
+import java.util.{Locale}
 import org.apache.http.impl.client.DefaultHttpClient
 import org.apache.http.client.methods.HttpGet
 
@@ -49,7 +49,6 @@ object ArticleProvider{
 
   final val EQUAL_PLACEHOLDER = "= ?"
   final val MP3_DIR           = "/Android/data/%s/files/".format(AUTHORITY)
-  final val RSS_URL           = "http://www.voanews.com/templates/Articles.rss?sectionPath=/learningenglish/home"
   final val RFC822DateTime = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US)
 
   val FIELDS = Map(BaseColumns._ID    -> "INTEGER PRIMARY KEY",
@@ -71,8 +70,11 @@ object ArticleProvider{
   val INDICES = Map("articles_guid_ix"       -> F_GUID,
                     "articles_deleted_at_ix" -> (F_PUBDATE + "," + F_DELETED_AT))
 
-  class VOARss(stream: java.io.InputStream){
-    val mXml = XML.load(stream)
+  class VOARss{
+    val RSS_URL = "http://www.voanews.com/templates/Articles.rss?sectionPath=/learningenglish/home"
+
+    val response = (new DefaultHttpClient).execute(new HttpGet(RSS_URL))
+    val mXml = XML.load(response.getEntity.getContent)
 
     def pubDate = {
       RFC822DateTime.parse((mXml \ "channel" \ F_PUBDATE).head.text.toString)
@@ -103,10 +105,9 @@ object ArticleProvider{
               script
             }
             case F_PUBDATE   => {
-              val datetime = RFC822DateTime.parse((item \ k).head.text)
-              val cal = Calendar.getInstance
-              cal.setTime(datetime)
-              "%4d-%02d-%02d %02d:%02d:%02d".format(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DATE), cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), cal.get(Calendar.SECOND))
+              val time = new Time
+              time.set(RFC822DateTime.parse((item \ k).head.text).getTime)
+              time.format("%Y-%m-%d %H:%M:%S")
             }
             case F_ENCLOSURE => item \ k \ "@url"
             case F_SENTENCE  => sentence
@@ -127,11 +128,6 @@ object ArticleProvider{
         }).toMap.filter{case(k, v) => v != null}
       })
     }
-  }
-
-  def downloadRss = {
-    val response = (new DefaultHttpClient).execute(new HttpGet(RSS_URL))
-    new VOARss(response.getEntity.getContent)
   }
 
   def mp3File(id: String) = {
