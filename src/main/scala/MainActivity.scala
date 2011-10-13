@@ -156,16 +156,14 @@ class MainActivity extends ListActivity {
 
   override def onContextItemSelected(item: MenuItem): Boolean = {
     val info = item.getMenuInfo.asInstanceOf[AdapterView.AdapterContextMenuInfo]
+    val uri = ContentUris.withAppendedId(getIntent.getData, info.id)
     item.getItemId match{
       case R.id.open => {
-        val uri = ContentUris.withAppendedId(getIntent.getData, info.id)
         startActivity(new Intent(Intent.ACTION_VIEW, uri))
       }
       case R.id.open_in_browser => {
         val itemView = info.targetView
-        val uri = ContentUris.withAppendedId(getIntent.getData, info.id)
         val c = mResolver.query(uri, Array(ArticleProvider.F_LINK), null, null, null)
-        c.moveToFirst
         val link = c.getString(c.getColumnIndex(ArticleProvider.F_LINK))
         val intent = new Intent(Intent.ACTION_VIEW, Uri.parse(link))
         startActivity(intent)
@@ -175,7 +173,6 @@ class MainActivity extends ListActivity {
         dialog.setMessage(R.string.are_you_sure_destroy)
         dialog.setPositiveButton("Yes", new DialogInterface.OnClickListener{
           override def onClick(dialog: DialogInterface, which: Int){
-            val uri = ContentUris.withAppendedId(getIntent.getData, info.id)
             val c = mResolver.delete(uri, null, null)
             render
           }

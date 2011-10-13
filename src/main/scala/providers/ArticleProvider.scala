@@ -286,12 +286,10 @@ class ArticleProvider extends ContentProvider {
 
   def query(uri: Uri, fields: Array[String], where: String, whereArgs: Array[String], sortOrder: String): Cursor = {
     val db = connection.getReadableDatabase
-    matcher `match` uri match {
+    val cursor = matcher `match` uri match {
       case INDEX => {
         val _fields = if(fields == null){ Array(BaseColumns._ID) } else { Array(BaseColumns._ID) ++ fields }
         val _where = if(where == null){ F_DELETED_AT + " is NULL" } else { where }
-        println(_where)
-        println(whereArgs)
         db.query(TABLE_NAME, _fields, _where, whereArgs, null, null, F_PUBDATE + " DESC")
       }
       case SHOW  => {
@@ -300,7 +298,8 @@ class ArticleProvider extends ContentProvider {
       }
       case _     => throw new IllegalArgumentException("Unknown URI " + uri)
     }
-
+    cursor.moveToFirst
+    cursor
   }
 
   protected class Database(context: Context) extends SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {

@@ -73,7 +73,6 @@ class ArticleActivity extends Activity {
     val fields = Array(ArticleProvider.F_SCRIPT, ArticleProvider.F_MP3, ArticleProvider.F_TIME, ArticleProvider.F_CURRENT_POSITION, ArticleProvider.F_SCROLL_Y)
     mResolver = getContentResolver
     val c = mResolver.query(getIntent.getData, fields, null, null, null)
-    c.moveToFirst
     val script   = c.getString(c.getColumnIndex(ArticleProvider.F_SCRIPT))
     val mp3      = c.getString(c.getColumnIndex(ArticleProvider.F_MP3))
     val time     = c.getString(c.getColumnIndex(ArticleProvider.F_TIME))
