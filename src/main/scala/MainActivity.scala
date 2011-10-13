@@ -175,7 +175,9 @@ class MainActivity extends ListActivity {
         dialog.setMessage(R.string.are_you_sure_destroy)
         dialog.setPositiveButton("Yes", new DialogInterface.OnClickListener{
           override def onClick(dialog: DialogInterface, which: Int){
-            println(info.id)
+            val uri = ContentUris.withAppendedId(getIntent.getData, info.id)
+            val c = mResolver.delete(uri, null, null)
+            render
           }
         })
 

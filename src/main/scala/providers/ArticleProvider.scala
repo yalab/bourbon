@@ -10,6 +10,7 @@ import _root_.android.util.Log
 import _root_.android.os.Environment
 import _root_.android.provider.BaseColumns
 import scala.xml.{XML, Elem}
+import scala.collection.mutable.ListBuffer
 import java.io.{File, FileOutputStream}
 import java.net.{URL, UnknownHostException}
 import java.text.SimpleDateFormat
@@ -243,36 +244,36 @@ class ArticleProvider extends ContentProvider {
 
   def delete(uri: Uri, where: String, whereArgs: Array[String]): Int = {
     val db = connection.getWritableDatabase
+    val target = new ListBuffer[String]
+
     matcher `match` uri match {
+      case SHOW => {
+        val id = uri.getPathSegments().get(1)
+        target += id
+        val path = ArticleProvider.mp3File(id.toString)
+        if(path.exists == true){ path.delete }
+      }
       case INDEX => {
         val c = query(uri, null, null, null, null)
         val offset = uri.getQueryParameter("offset")
-        val count = if(offset != null){
-          c.move(offset.toInt)
-          c.getCount - offset.toInt
-        }else{
-          c.getCount
-        }
-        val target = new Array[String](count)
-        var index = 0
+        if(offset != null){ c.move(offset.toInt) }
         while(c.moveToNext()){
           val id = c.getInt(c.getColumnIndex("_id"))
           val path = ArticleProvider.mp3File(id.toString)
           if(path.exists == true){ path.delete }
-          target.update(index, id.toString)
-          index = index + 1
+          target += id.toString
         }
-        val placeHolder = target.map(n => "?").mkString(", ")
-        val values = new ContentValues
-        for(k <- FIELDS.keys.filter(k => k != BaseColumns._ID && k != F_GUID && k != F_DELETED_AT)){
-          values.putNull(k)
-        }
-        val deletedAt = new Time
-        deletedAt.setToNow
-        values.put(F_DELETED_AT, deletedAt.format("%Y-%m-%d %H:%M:%S"))
-        db.update(TABLE_NAME, values, BaseColumns._ID + " IN(" + placeHolder + ")", target)
       }
     }
+    val placeHolder = target.map(n => "?").mkString(", ")
+    val values = new ContentValues
+    for(k <- FIELDS.keys.filter(k => k != BaseColumns._ID && k != F_GUID && k != F_DELETED_AT)){
+      values.putNull(k)
+    }
+    val deletedAt = new Time
+    deletedAt.setToNow
+    values.put(F_DELETED_AT, deletedAt.format("%Y-%m-%d %H:%M:%S"))
+    db.update(TABLE_NAME, values, BaseColumns._ID + " IN(" + placeHolder + ")", target.toArray[String])
   }
 
   def getType(uri: Uri): String = {
