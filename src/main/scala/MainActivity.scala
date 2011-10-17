@@ -23,11 +23,12 @@ class MainActivity extends ListActivity {
 
   val DOWNLOAD_MESSAGE = "Downloading. Please wait..."
   val TAG = "MainActivity"
-  var mResolver: ContentResolver = null
-  var mHandler: Handler = null
-  var mPrefs: SharedPreferences = null
-  var mCursor: Cursor = null
-  var mListView: ListView = null
+  var mResolver: ContentResolver   = null
+  var mHandler:  Handler           = null
+  var mPrefs:    SharedPreferences = null
+  var mCursor:   Cursor            = null
+  var mListView: ListView          = null
+  var mAdapter:  ArticleAdapter    = null
 
   private var crawlService: ICrawlService = null
   val crawlServiceConnection = new ServiceConnection{
@@ -49,7 +50,24 @@ class MainActivity extends ListActivity {
     mResolver = getContentResolver
     mListView = getListView
     mHandler  = new Handler
-    render
+val fields = Array(ArticleProvider.F_TITLE, ArticleProvider.F_SENTENCE, ArticleProvider.F_TIME)
+    mCursor = mResolver.query(ArticleProvider.CONTENT_URI, fields, null, null, null)
+    if(mCursor.getCount < 1){
+      val dialog = new Dialog(this)
+      dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+      dialog.setContentView(R.layout.first_step)
+      dialog.show
+      dialog.findViewById(R.id.ok_button).setOnClickListener(new View.OnClickListener{
+        def onClick(v: View){
+          dialog.dismiss
+        }
+      })
+    }
+    startManagingCursor(mCursor)
+    mAdapter = new ArticleAdapter(MainActivity.this, R.layout.row, mCursor,
+                                     fields, COLUMNS)
+    setListAdapter(mAdapter)
+    registerForContextMenu(getListView)
     val crawlerIntent = new Intent(MainActivity.this, classOf[CrawlService])
     bindService(crawlerIntent, crawlServiceConnection, Context.BIND_AUTO_CREATE)
   }
@@ -73,27 +91,6 @@ class MainActivity extends ListActivity {
       mResolver.delete(uriBuilder.build, null, null)
     }
     unbindService(crawlServiceConnection)
-  }
-
-  def render{
-    val fields = Array(ArticleProvider.F_TITLE, ArticleProvider.F_SENTENCE, ArticleProvider.F_TIME)
-    mCursor = mResolver.query(ArticleProvider.CONTENT_URI, fields, null, null, null)
-    if(mCursor.getCount < 1){
-      val dialog = new Dialog(this)
-      dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-      dialog.setContentView(R.layout.first_step)
-      dialog.show
-      dialog.findViewById(R.id.ok_button).setOnClickListener(new View.OnClickListener{
-        def onClick(v: View){
-          dialog.dismiss
-        }
-      })
-    }
-    startManagingCursor(mCursor)
-    val adapter = new ArticleAdapter(MainActivity.this, R.layout.row, mCursor,
-                                     fields, COLUMNS)
-    setListAdapter(adapter)
-    registerForContextMenu(getListView)
   }
 
   override def onCreateOptionsMenu(menu: Menu): Boolean = {
@@ -126,7 +123,7 @@ class MainActivity extends ListActivity {
               if(msg_id != 0){
                 Toast.makeText(MainActivity.this, getString(msg_id), Toast.LENGTH_SHORT).show
               }
-              render
+              mAdapter.notifyDataSetChanged
             } });
           }
         })).start
@@ -174,7 +171,7 @@ class MainActivity extends ListActivity {
         dialog.setPositiveButton("Yes", new DialogInterface.OnClickListener{
           override def onClick(dialog: DialogInterface, which: Int){
             val c = mResolver.delete(uri, null, null)
-            render
+            mAdapter.notifyDataSetChanged
           }
         })
 

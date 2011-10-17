@@ -269,7 +269,9 @@ class ArticleProvider extends ContentProvider {
     val deletedAt = new Time
     deletedAt.setToNow
     values.put(F_DELETED_AT, deletedAt.format("%Y-%m-%d %H:%M:%S"))
-    db.update(TABLE_NAME, values, BaseColumns._ID + " IN(" + placeHolder + ")", target.toArray[String])
+    val count = db.update(TABLE_NAME, values, BaseColumns._ID + " IN(" + placeHolder + ")", target.toArray[String])
+    getContext.getContentResolver.notifyChange(uri, null)
+    count
   }
 
   def getType(uri: Uri): String = {
@@ -295,6 +297,7 @@ class ArticleProvider extends ContentProvider {
       case _     => throw new IllegalArgumentException("Unknown URI " + uri)
     }
     cursor.moveToFirst
+    cursor.setNotificationUri(getContext.getContentResolver, uri);
     cursor
   }
 
