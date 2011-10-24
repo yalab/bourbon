@@ -125,7 +125,7 @@ object ArticleProvider{
             }
           }
           (k, v)
-        }).toMap.filter{case(k, v) => v != null}
+        }).toMap
       })
     }
   }
