@@ -90,10 +90,10 @@ object ArticleProvider{
             case F_MP3       => {
               val flashvars = (encoded \\ "param" filter(node => (node \ "@name").toString == "flashvars")) \ "@value"
               val queryString = flashvars.toString.split("&").map(str => str.split("=")).filter(a => a(0) == "file")
-              if(queryString.size > 0){
-                queryString(0)(1).replaceAll("[ 　]", "")
-              }else{
+              if(queryString.isEmpty){
                 null
+              }else{
+                queryString(0)(1).replaceAll("[ 　]", "")
               }
             }
             case F_SCRIPT    => {
