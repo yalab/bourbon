@@ -2,11 +2,15 @@ import sbt._
 
 import Keys._
 import AndroidKeys._
+import java.io.File
+import scala.xml.XML
 
 object General {
+  val androidManifest = XML.loadFile((new File("")).getAbsoluteFile + "/src/main/AndroidManifest.xml")
+  val versionCode = androidManifest(0) \ "@{http://schemas.android.com/apk/res/android}versionCode"
   val settings = Defaults.defaultSettings ++ Seq (
     name := "Bourbon",
-    version := "4",
+    version := versionCode.toString,
     scalaVersion := "2.9.1",
     platformName in Android := "android-8"
   )
