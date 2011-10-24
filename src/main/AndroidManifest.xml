@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-   android:versionName="2011.10.19"
+   android:versionName="2011.10.24"
    android:versionCode="4" package="org.yalab.bourbon"
    android:installLocation="auto">
     <uses-sdk android:minSdkVersion="8"></uses-sdk>
