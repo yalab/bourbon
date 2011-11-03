@@ -70,10 +70,11 @@ object ArticleProvider{
   val INDICES = Map("articles_guid_ix"       -> F_GUID,
                     "articles_deleted_at_ix" -> (F_PUBDATE + "," + F_DELETED_AT))
 
-  class VOARss{
-    val RSS_URL = "http://www.voanews.com/templates/Articles.rss?sectionPath=/learningenglish/home"
-
-    val response = (new DefaultHttpClient).execute(new HttpGet(RSS_URL))
+  class VOARss(section: String){
+    val SectionPath = Map("Special English" -> "/learningenglish/home",
+                          "News"            -> "/english/news")
+    val url = "http://www.voanews.com/templates/Articles.rss?sectionPath=" + SectionPath(section)
+    val response = (new DefaultHttpClient).execute(new HttpGet(url))
     val mXml = XML.load(response.getEntity.getContent)
 
     def pubDate = {
