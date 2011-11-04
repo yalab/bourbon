@@ -311,35 +311,30 @@ class ArticleProvider extends ContentProvider {
       INDICES.foreach{case(name, fields) => db.execSQL("CREATE INDEX %s ON %s(%s)".format(name, TABLE_NAME, fields)) }
     }
 
+    def partition (db: SQLiteDatabase, defined: Set[String], query: String) = {
+      var existed: Set[String] = Set()
+      val c = db.rawQuery(query, null)
+      while(c.moveToNext){ existed += c.getString(c.getColumnIndex("name")) }
+      val create = defined.diff(existed)
+      val drop   = existed.diff(defined)
+      (create, drop)
+    }
+
     def onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
       db.beginTransaction
       try{
-        var fields: Set[String] = FIELDS.keys.toSet
-        var existedFields: Set[String] = Set()
-        val tc = db.rawQuery("PRAGMA table_info('articles')", null)
-        while(tc.moveToNext){
-          existedFields += tc.getString(tc.getColumnIndex("name"))
+        partition(db, FIELDS.keys.toSet, "PRAGMA table_info('articles')") match{
+          case(create, drop) => {
+            for(field <- create){ db.execSQL("ALTER TABLE %s ADD COLUMN %s %s".format(TABLE_NAME, field, ArticleProvider.FIELDS(field))) }
+          }
         }
 
-        for(field <- fields.diff(existedFields)){
-          db.execSQL("ALTER TABLE %s ADD COLUMN %s %s".format(TABLE_NAME, field, ArticleProvider.FIELDS(field)))
+        partition(db, INDICES.keys.toSet, "PRAGMA index_list('articles')") match{
+          case(create, drop) => {
+            for(index <- create){ db.execSQL("CREATE INDEX %s ON %s(%s)".format(index, TABLE_NAME, INDICES(index))) }
+            for(index <- drop){ db.execSQL("DROP INDEX %s".format(index)) }
+          }
         }
-
-        var indices: Set[String] = INDICES.keys.toSet
-        var existedIndices: Set[String] = Set()
-        val ic = db.rawQuery("PRAGMA index_list('articles')", null)
-        while(ic.moveToNext){
-          existedIndices += ic.getString(ic.getColumnIndex("name"))
-        }
-
-        for(index <- indices.diff(existedIndices)){
-          db.execSQL("CREATE INDEX %s ON %s(%s)".format(index, TABLE_NAME, INDICES(index)))
-        }
-        for(index <- existedIndices.diff(indices)){
-          db.execSQL("DROP INDEX %s".format(index))
-        }
-        println(oldVersion)
-        println(newVersion)
         if(oldVersion == 3 && newVersion == 4){
           db.execSQL("UPDATE articles SET %s = '%s'".format(F_SECTION, "Special English"))
         }
