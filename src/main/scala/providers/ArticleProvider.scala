@@ -1,7 +1,7 @@
 package org.yalab.bourbon
 
 import _root_.android.content.{ContentProvider, ContentValues, ContentUris, Context, UriMatcher}
-import _root_.android.database.Cursor
+import _root_.android.database.{Cursor, SQLException}
 import _root_.android.database.sqlite.{SQLiteDatabase, SQLiteOpenHelper}
 import _root_.android.net.{Uri, ConnectivityManager}
 import _root_.android.net.wifi.WifiManager
@@ -20,7 +20,7 @@ import org.apache.http.client.methods.HttpGet
 
 object ArticleProvider{
   final val DATABASE_NAME    = "bourbon.db"
-  final val DATABASE_VERSION = 3
+  final val DATABASE_VERSION = 4
   final val AUTHORITY = "org.yalab.bourbon"
   final val TABLE_NAME = "articles"
   final val CONTENT_URI = Uri.parse("content://" + AUTHORITY + "/" + TABLE_NAME)
@@ -45,6 +45,7 @@ object ArticleProvider{
   final val F_BOOKMARKED_AT    = "bookmarked_at"
   final val F_SCROLL_Y         = "scroll_y"
   final val F_DELETED_AT       = "deleted_at"
+  final val F_SECTION          = "section"
   final val TAG = "ArticleProvider"
 
   final val EQUAL_PLACEHOLDER = "= ?"
@@ -66,9 +67,10 @@ object ArticleProvider{
                    F_CURRENT_POSITION -> "INTEGER",
                    F_BOOKMARKED_AT    -> "TEXT",
                    F_SCROLL_Y         -> "INTEGER",
-                   F_DELETED_AT       -> "TEXT")
+                   F_DELETED_AT       -> "TEXT",
+                   F_SECTION          -> "TEXT")
   val INDICES = Map("articles_guid_ix"       -> F_GUID,
-                    "articles_deleted_at_ix" -> (F_PUBDATE + "," + F_DELETED_AT))
+                    "articles_deleted_at_section_ix" -> (F_PUBDATE + "," + F_DELETED_AT+ "," + F_SECTION) )
 
   class VOARss(section: String){
     val SectionPath = Map("Special English" -> "/learningenglish/home",
@@ -310,28 +312,40 @@ class ArticleProvider extends ContentProvider {
     }
 
     def onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-      var fields: Set[String] = FIELDS.keys.toSet
-      val tc = db.rawQuery("PRAGMA table_info('articles')", null)
-      while(tc.moveToNext){
-        val fieldName = tc.getString(tc.getColumnIndex("name"))
-        if(fields.contains(fieldName)){
-          fields = fields - fieldName
+      db.beginTransaction
+      try{
+        var fields: Set[String] = FIELDS.keys.toSet
+        var existedFields: Set[String] = Set()
+        val tc = db.rawQuery("PRAGMA table_info('articles')", null)
+        while(tc.moveToNext){
+          existedFields += tc.getString(tc.getColumnIndex("name"))
         }
-      }
-      for(field <- fields){
-        db.execSQL("ALTER TABLE %s ADD COLUMN %s %s".format(TABLE_NAME, field, ArticleProvider.FIELDS(field)))
-      }
 
-      var indices: Set[String] = INDICES.keys.toSet
-      val ic = db.rawQuery("PRAGMA index_list('articles')", null)
-      while(ic.moveToNext){
-        val indexName = ic.getString(ic.getColumnIndex("name"))
-        if(indices.contains(indexName)){
-          indices = indices - indexName
+        for(field <- fields.diff(existedFields)){
+          db.execSQL("ALTER TABLE %s ADD COLUMN %s %s".format(TABLE_NAME, field, ArticleProvider.FIELDS(field)))
         }
-      }
-      for(index <- indices){
-        db.execSQL("CREATE INDEX %s ON %s(%s)".format(index, TABLE_NAME, INDICES(index)))
+
+        var indices: Set[String] = INDICES.keys.toSet
+        var existedIndices: Set[String] = Set()
+        val ic = db.rawQuery("PRAGMA index_list('articles')", null)
+        while(ic.moveToNext){
+          existedIndices += ic.getString(ic.getColumnIndex("name"))
+        }
+
+        for(index <- indices.diff(existedIndices)){
+          db.execSQL("CREATE INDEX %s ON %s(%s)".format(index, TABLE_NAME, INDICES(index)))
+        }
+        for(index <- existedIndices.diff(indices)){
+          db.execSQL("DROP INDEX %s".format(index))
+        }
+        println(oldVersion)
+        println(newVersion)
+        if(oldVersion == 3 && newVersion == 4){
+          db.execSQL("UPDATE articles SET %s = '%s'".format(F_SECTION, "Special English"))
+        }
+        db.setTransactionSuccessful
+      }finally{
+        db.endTransaction
       }
     }
   }
