@@ -18,7 +18,7 @@ object MainActivity {
   val ICON_COLUMN_INDEX = 3
 }
 
-class MainActivity extends ListActivity {
+class MainActivity extends Activity {
   import MainActivity._
 
   val DOWNLOAD_MESSAGE = "Downloading. Please wait..."
@@ -42,13 +42,17 @@ class MainActivity extends ListActivity {
 
   override def onCreate(savedInstanceState: Bundle) {
     super.onCreate(savedInstanceState)
+    setContentView(R.layout.main)
+
     mPrefs = PreferenceManager.getDefaultSharedPreferences(this)
     val intent = getIntent
     if(intent.getData == null){
       intent.setData(ArticleProvider.CONTENT_URI)
     }
     mResolver = getContentResolver
-    mListView = getListView
+
+    mListView = findViewById(R.id.list).asInstanceOf[ListView]
+
     mHandler  = new Handler
 val fields = Array(ArticleProvider.F_TITLE, ArticleProvider.F_SENTENCE, ArticleProvider.F_TIME)
     mCursor = mResolver.query(ArticleProvider.CONTENT_URI, fields, null, null, null)
@@ -66,8 +70,14 @@ val fields = Array(ArticleProvider.F_TITLE, ArticleProvider.F_SENTENCE, ArticleP
     startManagingCursor(mCursor)
     mAdapter = new ArticleAdapter(MainActivity.this, R.layout.row, mCursor,
                                      fields, COLUMNS)
-    setListAdapter(mAdapter)
-    registerForContextMenu(getListView)
+    mListView.setAdapter(mAdapter)
+    mListView.setOnItemClickListener(new AdapterView.OnItemClickListener{
+      def onItemClick(l: AdapterView[_], v: View, position: Int, id: Long) {
+        val uri = ContentUris.withAppendedId(getIntent.getData, id)
+        startActivity(new Intent(Intent.ACTION_VIEW, uri))
+      }
+    })
+    registerForContextMenu(mListView)
     val crawlerIntent = new Intent(MainActivity.this, classOf[CrawlService])
     bindService(crawlerIntent, crawlServiceConnection, Context.BIND_AUTO_CREATE)
   }
@@ -135,11 +145,6 @@ val fields = Array(ArticleProvider.F_TITLE, ArticleProvider.F_SENTENCE, ArticleP
         true
       }
     }
-  }
-
-  override def onListItemClick(l: ListView, v: View, position: Int, id: Long) {
-    val uri = ContentUris.withAppendedId(getIntent.getData, id)
-    startActivity(new Intent(Intent.ACTION_VIEW, uri))
   }
 
   override def onCreateContextMenu(menu: ContextMenu, v: View, menuInfo: ContextMenu.ContextMenuInfo){
