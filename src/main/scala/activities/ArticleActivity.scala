@@ -1,16 +1,16 @@
 package org.yalab.bourbon
 
-import _root_.android.app.{Activity, ProgressDialog}
-import _root_.android.content.{ContentResolver, ContentValues, ContentUris}
-import _root_.android.media.{MediaPlayer, AudioManager}
-import _root_.android.os.{Bundle, Handler}
-import _root_.android.net.Uri
-import _root_.android.provider.BaseColumns
-import _root_.android.view.{View, KeyEvent, Window}
-import _root_.android.view.View.OnLongClickListener
-import _root_.android.widget.{SeekBar, ImageButton, Toast}
-import _root_.android.widget.SeekBar.OnSeekBarChangeListener
-import _root_.android.webkit.{WebView, WebViewClient, WebChromeClient}
+import android.app.{Activity, ProgressDialog}
+import android.content.{ContentResolver, ContentValues, ContentUris}
+import android.media.{MediaPlayer, AudioManager}
+import android.os.{Bundle, Handler}
+import android.net.Uri
+import android.provider.BaseColumns
+import android.view.{View, KeyEvent, Window}
+import android.view.View.OnLongClickListener
+import android.widget.{SeekBar, ImageButton, Toast}
+import android.widget.SeekBar.OnSeekBarChangeListener
+import android.webkit.{WebView, WebViewClient, WebChromeClient}
 import scala.io.Source
 import java.io.IOException
 

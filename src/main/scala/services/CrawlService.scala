@@ -1,11 +1,11 @@
 package org.yalab.bourbon
 
-import _root_.android.app.Service
-import _root_.android.content.{ContentValues, ContentResolver, Intent, SharedPreferences}
-import _root_.android.os.{IBinder, Handler}
-import _root_.android.preference.PreferenceManager
-import _root_.android.util.Log
-import _root_.android.widget.Toast
+import android.app.Service
+import android.content.{ContentValues, ContentResolver, Intent, SharedPreferences}
+import android.os.{IBinder, Handler}
+import android.preference.PreferenceManager
+import android.util.Log
+import android.widget.Toast
 
 import java.io.IOException
 import java.net.UnknownHostException

@@ -1,13 +1,13 @@
 package org.yalab.bourbon
 
-import _root_.android.app.{Activity, ListActivity, ProgressDialog, Dialog, AlertDialog}
-import _root_.android.content.{ContentValues, Intent, ContentUris, Context, ContentResolver, SharedPreferences, ComponentName, ServiceConnection, DialogInterface}
-import _root_.android.database.Cursor
-import _root_.android.net.Uri
-import _root_.android.os.{Bundle, Handler, IBinder}
-import _root_.android.preference.PreferenceManager
-import _root_.android.widget.{TextView, ListView, SimpleCursorAdapter, Toast, ImageView, AdapterView}
-import _root_.android.view.{Menu, MenuItem, View, LayoutInflater, ContextMenu, Window}
+import android.app.{Activity, ListActivity, ProgressDialog, Dialog, AlertDialog}
+import android.content.{ContentValues, Intent, ContentUris, Context, ContentResolver, SharedPreferences, ComponentName, ServiceConnection, DialogInterface}
+import android.database.Cursor
+import android.net.Uri
+import android.os.{Bundle, Handler, IBinder}
+import android.preference.PreferenceManager
+import android.widget.{TextView, ListView, SimpleCursorAdapter, Toast, ImageView, AdapterView}
+import android.view.{Menu, MenuItem, View, LayoutInflater, ContextMenu, Window}
 import java.lang.Runnable
 
 object MainActivity {

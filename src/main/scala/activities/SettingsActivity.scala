@@ -1,7 +1,7 @@
 package org.yalab.bourbon
 
-import _root_.android.os.Bundle
-import _root_.android.preference.PreferenceActivity
+import android.os.Bundle
+import android.preference.PreferenceActivity
 
 class SettingsActivity extends PreferenceActivity{
   override def onCreate(state: Bundle){

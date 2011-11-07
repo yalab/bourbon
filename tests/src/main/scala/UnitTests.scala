@@ -1,7 +1,7 @@
 package org.yalab.bourbon.tests
 
 import junit.framework.Assert._
-import _root_.android.test.AndroidTestCase
+import android.test.AndroidTestCase
 
 class UnitTests extends AndroidTestCase {
   def testPackageIsCorrect {

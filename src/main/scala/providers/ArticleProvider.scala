@@ -1,14 +1,14 @@
 package org.yalab.bourbon
 
-import _root_.android.content.{ContentProvider, ContentValues, ContentUris, Context, UriMatcher}
-import _root_.android.database.{Cursor, SQLException}
-import _root_.android.database.sqlite.{SQLiteDatabase, SQLiteOpenHelper}
-import _root_.android.net.{Uri, ConnectivityManager}
-import _root_.android.net.wifi.WifiManager
-import _root_.android.text.format.Time
-import _root_.android.util.Log
-import _root_.android.os.Environment
-import _root_.android.provider.BaseColumns
+import android.content.{ContentProvider, ContentValues, ContentUris, Context, UriMatcher}
+import android.database.{Cursor, SQLException}
+import android.database.sqlite.{SQLiteDatabase, SQLiteOpenHelper}
+import android.net.{Uri, ConnectivityManager}
+import android.net.wifi.WifiManager
+import android.text.format.Time
+import android.util.Log
+import android.os.Environment
+import android.provider.BaseColumns
 import scala.xml.{XML, Elem}
 import scala.collection.mutable.ListBuffer
 import java.io.{File, FileOutputStream}
