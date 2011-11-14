@@ -106,7 +106,14 @@ object ArticleProvider{
             }
             case F_PUBDATE   => {
               val time = new Time
-              time.set(RFC822DateTime.parse((item \ k).head.text).getTime)
+              try{
+                time.set(RFC822DateTime.parse((item \ k).head.text).getTime)
+              }catch{
+                case e: java.text.ParseException => {
+                  Log.i("VOARss", "Get invalid date from server '" + (item \ k).head.text + "'")
+                  time.setToNow
+                }
+              }
               time.format("%Y-%m-%d %H:%M:%S")
             }
             case F_ENCLOSURE => item \ k \ "@url"
