@@ -21,7 +21,8 @@ object General {
     TypedResources.settings ++
     AndroidMarketPublish.settings ++ Seq (
       keyalias in Android := "bourbon",
-      libraryDependencies += "org.scalatest" %% "scalatest" % "1.6.1" % "test"
+      libraryDependencies += "org.scalatest" %% "scalatest" % "1.6.1" % "test",
+      libraryDependencies += "com.google.android" % "support-v4" % "r6"
     )
 }
 
