@@ -6,9 +6,11 @@ import android.database.Cursor
 import android.net.Uri
 import android.os.{Bundle, Handler, IBinder}
 import android.preference.PreferenceManager
+import android.support.v4.view.{PagerAdapter, ViewPager}
 import android.widget.{TextView, ListView, SimpleCursorAdapter, Toast, ImageView, AdapterView}
 import android.view.{Menu, MenuItem, View, LayoutInflater, ContextMenu, Window}
 import java.lang.Runnable
+
 
 object MainActivity {
   final val OPTION_DOWNLOAD = Menu.FIRST
@@ -30,6 +32,52 @@ class MainActivity extends Activity {
   var mListView: ListView          = null
   var mAdapter:  ArticleAdapter    = null
 
+  private class ListSwitcher extends PagerAdapter{
+    override def getCount: Int = {
+      2
+    }
+
+    override def instantiateItem(collection: View, position: Int): Object = {
+      val listLayout = getApplicationContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE).asInstanceOf[LayoutInflater].inflate(R.layout.list, null, false)
+
+      mListView = listLayout.findViewById(R.id.list).asInstanceOf[ListView]
+      val fields = Array(ArticleProvider.F_TITLE, ArticleProvider.F_SENTENCE, ArticleProvider.F_TIME)
+      mCursor = mResolver.query(ArticleProvider.CONTENT_URI, fields, null, null, null)
+      if(mCursor.getCount < 1){
+        val dialog = new Dialog(MainActivity.this)
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        dialog.setContentView(R.layout.first_step)
+        dialog.show
+        dialog.findViewById(R.id.ok_button).setOnClickListener(new View.OnClickListener{
+          def onClick(v: View){
+            dialog.dismiss
+          }
+        })
+      }
+      startManagingCursor(mCursor)
+      mAdapter = new ArticleAdapter(MainActivity.this, R.layout.row, mCursor,
+                                    fields, COLUMNS)
+      mListView.setAdapter(mAdapter)
+      mListView.setOnItemClickListener(new AdapterView.OnItemClickListener{
+        def onItemClick(l: AdapterView[_], v: View, position: Int, id: Long) {
+          val uri = ContentUris.withAppendedId(getIntent.getData, id)
+          startActivity(new Intent(Intent.ACTION_VIEW, uri))
+        }
+      })
+      registerForContextMenu(mListView)
+      collection.asInstanceOf[ViewPager].addView(mListView, 0);
+      mListView
+    }
+
+    override def destroyItem(collection: View, position: Int, view: Object) {
+      collection.asInstanceOf[ViewPager].removeView(view.asInstanceOf[ListView])
+    }
+
+    override def isViewFromObject(view: View, obj: Object): Boolean = {
+      view==(obj.asInstanceOf[ListView])
+    }
+  }
+
   private var crawlService: ICrawlService = null
   val crawlServiceConnection = new ServiceConnection{
     override def onServiceConnected(name: ComponentName , service: IBinder ){
@@ -45,41 +93,18 @@ class MainActivity extends Activity {
     setContentView(R.layout.main)
 
     mPrefs = PreferenceManager.getDefaultSharedPreferences(this)
+    mHandler  = new Handler
     val intent = getIntent
     if(intent.getData == null){
       intent.setData(ArticleProvider.CONTENT_URI)
     }
     mResolver = getContentResolver
 
-    mListView = findViewById(R.id.list).asInstanceOf[ListView]
-
-    mHandler  = new Handler
-val fields = Array(ArticleProvider.F_TITLE, ArticleProvider.F_SENTENCE, ArticleProvider.F_TIME)
-    mCursor = mResolver.query(ArticleProvider.CONTENT_URI, fields, null, null, null)
-    if(mCursor.getCount < 1){
-      val dialog = new Dialog(this)
-      dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-      dialog.setContentView(R.layout.first_step)
-      dialog.show
-      dialog.findViewById(R.id.ok_button).setOnClickListener(new View.OnClickListener{
-        def onClick(v: View){
-          dialog.dismiss
-        }
-      })
-    }
-    startManagingCursor(mCursor)
-    mAdapter = new ArticleAdapter(MainActivity.this, R.layout.row, mCursor,
-                                     fields, COLUMNS)
-    mListView.setAdapter(mAdapter)
-    mListView.setOnItemClickListener(new AdapterView.OnItemClickListener{
-      def onItemClick(l: AdapterView[_], v: View, position: Int, id: Long) {
-        val uri = ContentUris.withAppendedId(getIntent.getData, id)
-        startActivity(new Intent(Intent.ACTION_VIEW, uri))
-      }
-    })
-    registerForContextMenu(mListView)
     val crawlerIntent = new Intent(MainActivity.this, classOf[CrawlService])
     bindService(crawlerIntent, crawlServiceConnection, Context.BIND_AUTO_CREATE)
+
+
+    findViewById(R.id.viewpager).asInstanceOf[ViewPager].setAdapter(new ListSwitcher)
   }
 
   override def onRestart{
