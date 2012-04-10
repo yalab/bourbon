@@ -20,7 +20,7 @@ import org.apache.http.client.methods.HttpGet
 
 object ArticleProvider{
   final val DATABASE_NAME    = "bourbon.db"
-  final val DATABASE_VERSION = 4
+  final val DATABASE_VERSION = 5
   final val AUTHORITY = "org.yalab.bourbon"
   final val TABLE_NAME = "articles"
   final val CONTENT_URI = Uri.parse("content://" + AUTHORITY + "/" + TABLE_NAME)
@@ -273,7 +273,7 @@ class ArticleProvider extends ContentProvider {
         if(path.exists == true){ path.delete }
       }
       case INDEX => {
-        val c = query(uri, null, null, null, null)
+        val c = query(uri, null, where, whereArgs, null)
         val offset = uri.getQueryParameter("offset")
         if(offset != null){ c.move(offset.toInt) }
         while(c.moveToNext()){
@@ -355,8 +355,8 @@ class ArticleProvider extends ContentProvider {
             for(index <- drop){ db.execSQL("DROP INDEX %s".format(index)) }
           }
         }
-        if(oldVersion == 3 && newVersion == 4){
-          db.execSQL("UPDATE articles SET %s = '%s'".format(F_SECTION, "Special English"))
+        if(oldVersion == 4 && newVersion == 5){
+          db.execSQL("UPDATE articles SET %s = '%s'".format(F_SECTION, "0"))
         }
         db.setTransactionSuccessful
       }finally{

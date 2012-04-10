@@ -28,47 +28,33 @@ class MainActivity extends Activity {
   var mResolver: ContentResolver   = null
   var mHandler:  Handler           = null
   var mPrefs:    SharedPreferences = null
+  var mCurrentSectionNumber: Int   = 0
   var mCursor:   Cursor            = null
-  var mListView: ListView          = null
-  var mAdapter:  ArticleAdapter    = null
-  var mCurrentListPosition: Int    = 0
 
   private class ListSwitcher extends PagerAdapter{
+    val mCursors = new Array[Cursor](ArticleProvider.VOARss.Sections.length)
     override def getCount: Int = {
-      ArticleProvider.VOARss.Sections.length
+      mCursors.length
     }
 
     override def instantiateItem(collection: View, position: Int): Object = {
-      val listLayout = getApplicationContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE).asInstanceOf[LayoutInflater].inflate(R.layout.list, null, false)
-
-      mListView = listLayout.findViewById(R.id.list).asInstanceOf[ListView]
+      val listView = new ListView(collection.getContext)
       val fields = Array(ArticleProvider.F_TITLE, ArticleProvider.F_SENTENCE, ArticleProvider.F_TIME)
-      mCursor = mResolver.query(ArticleProvider.CONTENT_URI, fields, null, null, null)
-      if(mCursor.getCount < 1){
-        val dialog = new Dialog(MainActivity.this)
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-        dialog.setContentView(R.layout.first_step)
-        dialog.show
-        dialog.findViewById(R.id.ok_button).setOnClickListener(new View.OnClickListener{
-          def onClick(v: View){
-            dialog.dismiss
-          }
-        })
-      }
-      startManagingCursor(mCursor)
-      mAdapter = new ArticleAdapter(MainActivity.this, R.layout.row, mCursor,
-                                    fields, COLUMNS)
-      mListView.setAdapter(mAdapter)
-      mListView.setOnItemClickListener(new AdapterView.OnItemClickListener{
+      val c = mResolver.query(ArticleProvider.CONTENT_URI, fields, "deleted_at is NULL AND section = ?", Array(position.toString), null)
+      startManagingCursor(c)
+      mCursors(position) = c
+      val adapter = new ArticleAdapter(MainActivity.this, R.layout.row, c, fields, COLUMNS)
+      listView.setAdapter(adapter)
+      listView.setOnItemClickListener(new AdapterView.OnItemClickListener{
         def onItemClick(l: AdapterView[_], v: View, position: Int, id: Long) {
           val uri = ContentUris.withAppendedId(getIntent.getData, id)
           startActivity(new Intent(Intent.ACTION_VIEW, uri))
         }
       })
-      registerForContextMenu(mListView)
-      collection.asInstanceOf[ViewPager].addView(mListView, 0)
-      mCurrentListPosition = position
-      mListView
+      registerForContextMenu(listView)
+      collection.asInstanceOf[ViewPager].addView(listView, position)
+      mCurrentSectionNumber = position
+      listView
     }
 
     override def destroyItem(collection: View, position: Int, view: Object) {
@@ -80,9 +66,12 @@ class MainActivity extends Activity {
     }
 
     override def finishUpdate(container: ViewGroup) {
-      mCurrentListPosition = container.indexOfChild(container.findFocus)
+      mCurrentSectionNumber = container.indexOfChild(container.findFocus)
       val main = container.getContext.asInstanceOf[Activity]
-      main.setTitle(main.getString(R.string.app_name) + " - " + ArticleProvider.VOARss.sectionName(mCurrentListPosition))
+      main.setTitle(main.getString(R.string.app_name) + " - " + ArticleProvider.VOARss.sectionName(mCurrentSectionNumber))
+      if(mCurrentSectionNumber > -1){
+        mCursor = mCursors(mCurrentSectionNumber)
+      }
     }
   }
 
@@ -107,10 +96,21 @@ class MainActivity extends Activity {
       intent.setData(ArticleProvider.CONTENT_URI)
     }
     mResolver = getContentResolver
+    val c = mResolver.query(ArticleProvider.CONTENT_URI, Array(android.provider.BaseColumns._ID), null, null, null)
+    if(c.getCount < 1){
+      val dialog = new Dialog(MainActivity.this)
+      dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+      dialog.setContentView(R.layout.first_step)
+      dialog.show
+      dialog.findViewById(R.id.ok_button).setOnClickListener(new View.OnClickListener{
+        def onClick(v: View){
+          dialog.dismiss
+        }
+      })
+    }
 
     val crawlerIntent = new Intent(MainActivity.this, classOf[CrawlService])
     bindService(crawlerIntent, crawlServiceConnection, Context.BIND_AUTO_CREATE)
-
 
     findViewById(R.id.viewpager).asInstanceOf[ViewPager].setAdapter(new ListSwitcher)
   }
@@ -128,10 +128,11 @@ class MainActivity extends Activity {
   override def onDestroy{
     super.onDestroy
     val removeOldArticle = mPrefs.getBoolean("remove_old_article", false)
+
     if(removeOldArticle && ArticleProvider.EXPIRE_NUM < mCursor.getCount){
       val uriBuilder = ArticleProvider.CONTENT_URI.buildUpon
       uriBuilder.appendQueryParameter("offset", ArticleProvider.EXPIRE_NUM.toString)
-      mResolver.delete(uriBuilder.build, null, null)
+      mResolver.delete(uriBuilder.build, "section = ?", Array(mCurrentSectionNumber.toString))
     }
     unbindService(crawlServiceConnection)
   }
@@ -166,7 +167,7 @@ class MainActivity extends Activity {
               if(msg_id != 0){
                 Toast.makeText(MainActivity.this, getString(msg_id), Toast.LENGTH_SHORT).show
               }
-              mAdapter.notifyDataSetChanged
+              // mAdapter.notifyDataSetChanged
             } });
           }
         })).start
@@ -183,9 +184,9 @@ class MainActivity extends Activity {
   override def onCreateContextMenu(menu: ContextMenu, v: View, menuInfo: ContextMenu.ContextMenuInfo){
     super.onCreateContextMenu(menu, v, menuInfo)
     val info = menuInfo.asInstanceOf[AdapterView.AdapterContextMenuInfo]
-    val c = mListView.getItemAtPosition(info.position).asInstanceOf[Cursor]
-    val title = c.getString(c.getColumnIndex(ArticleProvider.F_TITLE))
-    menu.setHeaderTitle(title)
+    // val c = mListView.getItemAtPosition(info.position).asInstanceOf[Cursor]
+    // val title = c.getString(c.getColumnIndex(ArticleProvider.F_TITLE))
+    // menu.setHeaderTitle(title)
     getMenuInflater.inflate(R.menu.main_context, menu)
   }
 
@@ -209,7 +210,7 @@ class MainActivity extends Activity {
         dialog.setPositiveButton("Yes", new DialogInterface.OnClickListener{
           override def onClick(dialog: DialogInterface, which: Int){
             val c = mResolver.delete(uri, null, null)
-            mAdapter.notifyDataSetChanged
+            // mAdapter.notifyDataSetChanged
           }
         })
 
