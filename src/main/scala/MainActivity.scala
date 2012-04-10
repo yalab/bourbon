@@ -28,11 +28,19 @@ class MainActivity extends Activity {
   var mResolver: ContentResolver   = null
   var mHandler:  Handler           = null
   var mPrefs:    SharedPreferences = null
-  var mCurrentSectionNumber: Int   = 0
-  var mCursor:   Cursor            = null
+  var mSwitcher: ListSwitcher      = null
 
-  private class ListSwitcher extends PagerAdapter{
+  class ListSwitcher extends PagerAdapter{
     val mCursors = new Array[Cursor](ArticleProvider.VOARss.Sections.length)
+
+    def getCursor: Cursor = {
+      mCursors(getSectionNumber)
+    }
+
+    def getSectionNumber: Int = {
+      findViewById(R.id.viewpager).asInstanceOf[ViewPager].getCurrentItem
+    }
+
     override def getCount: Int = {
       mCursors.length
     }
@@ -41,8 +49,8 @@ class MainActivity extends Activity {
       val listView = new ListView(collection.getContext)
       val fields = Array(ArticleProvider.F_TITLE, ArticleProvider.F_SENTENCE, ArticleProvider.F_TIME)
       val c = mResolver.query(ArticleProvider.CONTENT_URI, fields, "deleted_at is NULL AND section = ?", Array(position.toString), null)
-      startManagingCursor(c)
       mCursors(position) = c
+      startManagingCursor(c)
       val adapter = new ArticleAdapter(MainActivity.this, R.layout.row, c, fields, COLUMNS)
       listView.setAdapter(adapter)
       listView.setOnItemClickListener(new AdapterView.OnItemClickListener{
@@ -53,7 +61,6 @@ class MainActivity extends Activity {
       })
       registerForContextMenu(listView)
       collection.asInstanceOf[ViewPager].addView(listView, position)
-      mCurrentSectionNumber = position
       listView
     }
 
@@ -66,12 +73,8 @@ class MainActivity extends Activity {
     }
 
     override def finishUpdate(container: ViewGroup) {
-      mCurrentSectionNumber = container.indexOfChild(container.findFocus)
       val main = container.getContext.asInstanceOf[Activity]
-      main.setTitle(main.getString(R.string.app_name) + " - " + ArticleProvider.VOARss.sectionName(mCurrentSectionNumber))
-      if(mCurrentSectionNumber > -1){
-        mCursor = mCursors(mCurrentSectionNumber)
-      }
+      main.setTitle(main.getString(R.string.app_name) + " - " + ArticleProvider.VOARss.sectionName(getSectionNumber))
     }
   }
 
@@ -111,8 +114,8 @@ class MainActivity extends Activity {
 
     val crawlerIntent = new Intent(MainActivity.this, classOf[CrawlService])
     bindService(crawlerIntent, crawlServiceConnection, Context.BIND_AUTO_CREATE)
-
-    findViewById(R.id.viewpager).asInstanceOf[ViewPager].setAdapter(new ListSwitcher)
+    mSwitcher = new ListSwitcher
+    findViewById(R.id.viewpager).asInstanceOf[ViewPager].setAdapter(mSwitcher)
   }
 
   override def onRestart{
@@ -128,11 +131,10 @@ class MainActivity extends Activity {
   override def onDestroy{
     super.onDestroy
     val removeOldArticle = mPrefs.getBoolean("remove_old_article", false)
-
-    if(removeOldArticle && ArticleProvider.EXPIRE_NUM < mCursor.getCount){
+    if(removeOldArticle && ArticleProvider.EXPIRE_NUM < mSwitcher.getCursor.getCount){
       val uriBuilder = ArticleProvider.CONTENT_URI.buildUpon
       uriBuilder.appendQueryParameter("offset", ArticleProvider.EXPIRE_NUM.toString)
-      mResolver.delete(uriBuilder.build, "section = ?", Array(mCurrentSectionNumber.toString))
+      mResolver.delete(uriBuilder.build, "section = ?", Array(mSwitcher.getSectionNumber.toString))
     }
     unbindService(crawlServiceConnection)
   }
