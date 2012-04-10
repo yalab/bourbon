@@ -65,7 +65,7 @@ class MainActivity extends Activity {
         }
       })
       registerForContextMenu(mListView)
-      collection.asInstanceOf[ViewPager].addView(mListView, 0);
+      collection.asInstanceOf[ViewPager].addView(mListView, 0)
       mListView
     }
 
@@ -74,13 +74,13 @@ class MainActivity extends Activity {
     }
 
     override def isViewFromObject(view: View, obj: Object): Boolean = {
-      view==(obj.asInstanceOf[ListView])
+      view == obj.asInstanceOf[ListView]
     }
   }
 
   private var crawlService: ICrawlService = null
   val crawlServiceConnection = new ServiceConnection{
-    override def onServiceConnected(name: ComponentName , service: IBinder ){
+    override def onServiceConnected(name: ComponentName , service: IBinder){
       crawlService = ICrawlService.Stub.asInterface(service)
     }
     override def onServiceDisconnected(name: ComponentName) {
