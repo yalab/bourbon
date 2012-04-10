@@ -35,7 +35,7 @@ class MainActivity extends Activity {
 
   private class ListSwitcher extends PagerAdapter{
     override def getCount: Int = {
-      2
+      ArticleProvider.VOARss.Sections.length
     }
 
     override def instantiateItem(collection: View, position: Int): Object = {
