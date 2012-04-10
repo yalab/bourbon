@@ -8,7 +8,7 @@ import android.os.{Bundle, Handler, IBinder}
 import android.preference.PreferenceManager
 import android.support.v4.view.{PagerAdapter, ViewPager}
 import android.widget.{TextView, ListView, SimpleCursorAdapter, Toast, ImageView, AdapterView}
-import android.view.{Menu, MenuItem, View, LayoutInflater, ContextMenu, Window}
+import android.view.{Menu, MenuItem, View, LayoutInflater, ContextMenu, Window, ViewGroup}
 import java.lang.Runnable
 
 
@@ -31,6 +31,7 @@ class MainActivity extends Activity {
   var mCursor:   Cursor            = null
   var mListView: ListView          = null
   var mAdapter:  ArticleAdapter    = null
+  var mCurrentListPosition: Int    = 0
 
   private class ListSwitcher extends PagerAdapter{
     override def getCount: Int = {
@@ -66,6 +67,7 @@ class MainActivity extends Activity {
       })
       registerForContextMenu(mListView)
       collection.asInstanceOf[ViewPager].addView(mListView, 0)
+      mCurrentListPosition = position
       mListView
     }
 
@@ -75,6 +77,15 @@ class MainActivity extends Activity {
 
     override def isViewFromObject(view: View, obj: Object): Boolean = {
       view == obj.asInstanceOf[ListView]
+    }
+
+    override def finishUpdate(container: ViewGroup) {
+      mCurrentListPosition = container.indexOfChild(container.findFocus)
+      if(mCurrentListPosition > -1){
+        val main = container.getContext.asInstanceOf[Activity]
+        val sectionName = ArticleProvider.VOARss.Sections(mCurrentListPosition)
+        main.setTitle(main.getString(R.string.app_name) + " - " + sectionName)
+      }
     }
   }
 

@@ -72,9 +72,15 @@ object ArticleProvider{
   val INDICES = Map("articles_guid_ix"       -> F_GUID,
                     "articles_deleted_at_section_ix" -> (F_PUBDATE + "," + F_DELETED_AT+ "," + F_SECTION) )
 
-  class VOARss(section: String){
+  object VOARss{
     val SectionPath = Map("Special English" -> "/learningenglish/home",
                           "News"            -> "/english/news")
+    val Sections = SectionPath.keys.toArray
+  }
+
+  class VOARss(section: String){
+    import VOARss._
+
     val url = "http://www.voanews.com/templates/Articles.rss?sectionPath=" + SectionPath(section)
     val response = (new DefaultHttpClient).execute(new HttpGet(url))
     val mXml = XML.load(response.getEntity.getContent)
