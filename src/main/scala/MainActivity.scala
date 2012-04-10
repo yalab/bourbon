@@ -81,11 +81,8 @@ class MainActivity extends Activity {
 
     override def finishUpdate(container: ViewGroup) {
       mCurrentListPosition = container.indexOfChild(container.findFocus)
-      if(mCurrentListPosition > -1){
-        val main = container.getContext.asInstanceOf[Activity]
-        val sectionName = ArticleProvider.VOARss.Sections(mCurrentListPosition)
-        main.setTitle(main.getString(R.string.app_name) + " - " + sectionName)
-      }
+      val main = container.getContext.asInstanceOf[Activity]
+      main.setTitle(main.getString(R.string.app_name) + " - " + ArticleProvider.VOARss.sectionName(mCurrentListPosition))
     }
   }
 

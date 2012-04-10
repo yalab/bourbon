@@ -76,6 +76,13 @@ object ArticleProvider{
     val SectionPath = Map("Special English" -> "/learningenglish/home",
                           "News"            -> "/english/news")
     val Sections = SectionPath.keys.toArray
+    def sectionName(n: Int): String = {
+      if(n > -1){
+        Sections(n)
+      }else{
+        ""
+      }
+    }
   }
 
   class VOARss(section: String){
