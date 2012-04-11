@@ -67,7 +67,7 @@ class CrawlService extends Service{
       val lastUpdate = ArticleProvider.RFC822DateTime.parse(mPrefs.getString("lastUpdate", "Thu, 01 Jan 1970 00:00:00 GMT"))
       val pubDate = rss.pubDate
       if(!lastUpdate.equals(pubDate)){
-        rss.parse.filter(article => article.contains(ArticleProvider.F_MP3) && article(ArticleProvider.F_MP3) != null ).foreach(article => {
+        rss.parse.foreach(article => {
           val values = new ContentValues
           article.filter{case(k, v) => v != null}.foreach{case(k, v) => values.put(k, v.toString)}
           val c = mResolver.query(ArticleProvider.CONTENT_URI, Array(),

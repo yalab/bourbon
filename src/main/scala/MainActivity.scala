@@ -47,7 +47,7 @@ class MainActivity extends Activity {
 
     override def instantiateItem(collection: View, position: Int): Object = {
       val listView = new ListView(collection.getContext)
-      val fields = Array(ArticleProvider.F_TITLE, ArticleProvider.F_SENTENCE, ArticleProvider.F_TIME)
+      val fields = Array(ArticleProvider.F_TITLE, ArticleProvider.F_SENTENCE, ArticleProvider.F_TIME, ArticleProvider.F_MP3)
       val c = mResolver.query(ArticleProvider.CONTENT_URI, fields, "deleted_at is NULL AND section = ?", Array(position.toString), null)
       mCursors(position) = c
       startManagingCursor(c)
@@ -239,14 +239,19 @@ class MainActivity extends Activity {
           true
         }
         case MainActivity.ICON_COLUMN_INDEX => {
-          val time = c.getString(c.getColumnIndex(ArticleProvider.F_TIME))
-          val icon = if(time != null){
-            R.drawable.music
+          val mp3  = c.getString(c.getColumnIndex(ArticleProvider.F_MP3))
+          if(mp3 == null){
+            false
           }else{
-            R.drawable.download
+            val time = c.getString(c.getColumnIndex(ArticleProvider.F_TIME))
+            val icon = if(time != null){
+              R.drawable.music
+            }else{
+              R.drawable.download
+            }
+            v.asInstanceOf[ImageView].setImageResource(icon)
+            true
           }
-          v.asInstanceOf[ImageView].setImageResource(icon)
-          true
         }
         case _ => false
       }

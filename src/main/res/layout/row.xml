@@ -5,7 +5,7 @@
     android:layout_height="fill_parent">
   <ImageView
      android:id="@+id/icon"
-     android:layout_width="wrap_content"
+     android:layout_width="16dip"
      android:layout_height="wrap_content"
      android:paddingLeft="5dip"
      android:src="@drawable/download"
