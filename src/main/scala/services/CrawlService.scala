@@ -40,9 +40,9 @@ class CrawlService extends Service{
   }
 
   val pipe = new ICrawlService.Stub{
-    override def send(message: Int): Int = {
+    override def send(message: Int, sectionNumber: Int): Int = {
       message match{
-        case INVOKE => crawl
+        case INVOKE => crawl(sectionNumber)
         case START  => {
           mHandler.removeCallbacksAndMessages(null)
           mHandler.postDelayed(new Crawler, 0)
@@ -61,19 +61,18 @@ class CrawlService extends Service{
     return pipe
   }
 
-  def crawl: Int = {
+  def crawl(sectionNumber: Int): Int = {
     try{
-      val rss = new ArticleProvider.VOARss("Special English")
+      val rss = new ArticleProvider.VOARss(sectionNumber)
       val lastUpdate = ArticleProvider.RFC822DateTime.parse(mPrefs.getString("lastUpdate", "Thu, 01 Jan 1970 00:00:00 GMT"))
       val pubDate = rss.pubDate
       if(!lastUpdate.equals(pubDate)){
         rss.parse.filter(article => article.contains(ArticleProvider.F_MP3) && article(ArticleProvider.F_MP3) != null ).foreach(article => {
           val values = new ContentValues
           article.filter{case(k, v) => v != null}.foreach{case(k, v) => values.put(k, v.toString)}
-
           val c = mResolver.query(ArticleProvider.CONTENT_URI, Array(),
-                                  ArticleProvider.F_GUID + ArticleProvider.EQUAL_PLACEHOLDER,
-                                  Array(article(ArticleProvider.F_GUID).toString), null)
+                                  ArticleProvider.F_GUID + ArticleProvider.EQUAL_PLACEHOLDER + " AND " + ArticleProvider.F_SECTION + ArticleProvider.EQUAL_PLACEHOLDER,
+                                  Array(article(ArticleProvider.F_GUID).toString, article(ArticleProvider.F_SECTION).toString), null)
           if(c.getCount < 1){
             mResolver.insert(ArticleProvider.CONTENT_URI, values)
           }
@@ -100,7 +99,7 @@ class CrawlService extends Service{
       (new Thread(new Runnable(){
         def run {
           Log.v(TAG, "start crawl")
-          crawl
+          // crawl
           Log.v(TAG, "stop crawl")
         }
       })).start

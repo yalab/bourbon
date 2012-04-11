@@ -85,10 +85,10 @@ object ArticleProvider{
     }
   }
 
-  class VOARss(section: String){
+  class VOARss(sectionNumber: Int){
     import VOARss._
 
-    val url = "http://www.voanews.com/templates/Articles.rss?sectionPath=" + SectionPath(section)
+    val url = "http://www.voanews.com/templates/Articles.rss?sectionPath=" + SectionPath(sectionName(sectionNumber))
     val response = (new DefaultHttpClient).execute(new HttpGet(url))
     val mXml = XML.load(response.getEntity.getContent)
 
@@ -134,6 +134,7 @@ object ArticleProvider{
             }
             case F_ENCLOSURE => item \ k \ "@url"
             case F_SENTENCE  => sentence
+            case F_SECTION   => sectionNumber
             case _           => {
               try{
                 (item \ k).head.text

@@ -125,7 +125,7 @@ class MainActivity extends Activity {
     }else{
       CrawlService.STOP
     }
-    crawlService.send(message)
+    crawlService.send(message, 0)
   }
 
   override def onDestroy{
@@ -158,7 +158,7 @@ class MainActivity extends Activity {
           val dialog = ProgressDialog.show(MainActivity.this, null,
                                            DOWNLOAD_MESSAGE, true, true)
           def run{
-            val result = crawlService.send(CrawlService.INVOKE)
+            val result = crawlService.send(CrawlService.INVOKE, mSwitcher.getSectionNumber)
             dialog.dismiss
             mHandler.post(new Runnable() { def run {
               val msg_id = result match{
@@ -169,7 +169,7 @@ class MainActivity extends Activity {
               if(msg_id != 0){
                 Toast.makeText(MainActivity.this, getString(msg_id), Toast.LENGTH_SHORT).show
               }
-              // mAdapter.notifyDataSetChanged
+              mSwitcher.notifyDataSetChanged
             } });
           }
         })).start
@@ -212,7 +212,7 @@ class MainActivity extends Activity {
         dialog.setPositiveButton("Yes", new DialogInterface.OnClickListener{
           override def onClick(dialog: DialogInterface, which: Int){
             val c = mResolver.delete(uri, null, null)
-            // mAdapter.notifyDataSetChanged
+            mSwitcher.notifyDataSetChanged
           }
         })
 
