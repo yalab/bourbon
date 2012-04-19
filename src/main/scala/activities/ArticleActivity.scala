@@ -185,7 +185,7 @@ class ArticleActivity extends Activity {
     val js = """
     location.href = 'http://eow.alc.co.jp/' + word.replace(/[,.]/g, '') + '/UTF-8/';
     """
-    mWebView.loadData(ArticleProvider.htmlHeader.format(js) + script + ArticleProvider.htmlFooter, "text/html", "utf-8")
+    mWebView.loadData(ArticleProvider.htmlHeader.format(js) + script + ArticleProvider.htmlFooter, "text/html; charset=UTF-8", null)
   }
 
   override def onKeyDown(keyCode: Int, event: KeyEvent): Boolean = {
